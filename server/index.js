@@ -30,6 +30,13 @@ if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
 }
 
+// Serve FormFriend standalone PWA files from root
+const rootPath = path.join(__dirname, '..');
+app.use('/FormFriend.html', express.static(path.join(rootPath, 'FormFriend.html')));
+app.use('/manifest.json', express.static(path.join(rootPath, 'manifest.json')));
+app.use('/icon.svg', express.static(path.join(rootPath, 'icon.svg')));
+app.use('/sw.js', express.static(path.join(rootPath, 'sw.js')));
+
 // GET available form templates
 app.get('/api/forms', (req, res) => {
   const lang = req.query.lang || 'de';
@@ -152,5 +159,21 @@ if (fs.existsSync(buildPath)) {
 app.listen(PORT, () => {
   console.log(`FormFriend server running on port ${PORT}`);
 });
+
+// HTTPS server for PWA on iPhone (self-signed cert)
+const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
+const sslKeyPath = path.join(__dirname, '../ssl/key.pem');
+const sslCertPath = path.join(__dirname, '../ssl/cert.pem');
+if (fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)) {
+  const https = require('https');
+  const sslOptions = {
+    key: fs.readFileSync(sslKeyPath),
+    cert: fs.readFileSync(sslCertPath)
+  };
+  https.createServer(sslOptions, app).listen(HTTPS_PORT, () => {
+    console.log(`FormFriend HTTPS server running on port ${HTTPS_PORT}`);
+    console.log(`iPhone: https://192.0.2.2:${HTTPS_PORT}/FormFriend.html`);
+  });
+}
 
 module.exports = app;
