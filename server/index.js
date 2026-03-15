@@ -23,9 +23,11 @@ const upload = multer({
   }
 });
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
+// Serve static files when build exists
+const buildPath = path.join(__dirname, '../client/build');
+const fs = require('fs');
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
 }
 
 // GET available form templates
@@ -140,10 +142,10 @@ app.post('/api/documents/upload', upload.single('document'), (req, res) => {
   });
 });
 
-// Catch-all for production SPA
-if (process.env.NODE_ENV === 'production') {
+// Catch-all for SPA
+if (fs.existsSync(buildPath)) {
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+    res.sendFile(path.join(buildPath, 'index.html'));
   });
 }
 
