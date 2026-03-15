@@ -63,6 +63,25 @@ footer{background:#1e293b;color:#94a3b8;text-align:center;padding:1rem;font-size
 .gloss-card h3{color:#1e293b;margin-bottom:.5rem;font-size:1.05rem}
 .gloss-card p{color:#64748b;font-size:.95rem}
 .hidden{display:none}
+.btn-orange{background:#ea580c;color:#fff}.btn-orange:hover{background:#c2410c}
+.scan-area{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:1.5rem;margin-bottom:1rem}
+.scan-area h2{color:#1e293b;margin-bottom:1rem}
+.camera-box{position:relative;width:100%;max-width:500px;margin:0 auto;border-radius:12px;overflow:hidden;background:#000}
+.camera-box video,.camera-box canvas,.camera-box img{width:100%;display:block;border-radius:12px}
+.camera-box canvas{display:none}
+.snap-btn{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid #2563eb;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.snap-btn:hover{background:#dbeafe}
+.scan-result{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:1.5rem;margin-top:1rem}
+.scan-result h2{color:#16a34a;margin-bottom:.5rem}
+.scan-result h3{color:#1e293b;margin:.75rem 0 .5rem}
+.scan-result p{color:#475569;margin-bottom:.5rem}
+.scan-result ul{list-style:none;padding:0}
+.scan-result li{padding:.4rem 0;color:#475569;display:flex;align-items:center;gap:.5rem}
+.scan-result li::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#2563eb;flex-shrink:0}
+.scan-or{text-align:center;color:#94a3b8;margin:1rem 0;font-size:.9rem}
+.scan-upload{display:block;width:100%;padding:1rem;border:2px dashed #cbd5e1;border-radius:8px;text-align:center;cursor:pointer;color:#64748b;background:#f8fafc;font-size:1rem}
+.scan-upload:hover{border-color:#2563eb;color:#2563eb}
+.scan-preview{width:100%;max-width:500px;margin:1rem auto;border-radius:12px;display:block}
 @media(max-width:640px){header{flex-direction:column;gap:.75rem}.hero h2{font-size:1.4rem}.actions{flex-direction:column;align-items:center}.steps{flex-direction:column;align-items:center}.step-card{max-width:100%}.lang-bar{justify-content:center}.wiz-body{padding:1.25rem 1rem}}
 </style>
 </head>
@@ -92,13 +111,13 @@ var langs = [
 ];
 
 var ui = {
-  de:{tagline:'Ihr Helfer für deutsche Formulare',desc:'Wir helfen Ihnen, deutsche Behördenformulare einfach und richtig auszufüllen. Schritt für Schritt, in Ihrer Sprache.',selectForm:'Formular wählen',glossary:'Wörterbuch',step1:'Formular wählen',step2:'Fragen beantworten',step3:'Formular herunterladen',next:'Weiter',back:'Zurück',submit:'Absenden',download:'Herunterladen',home:'Startseite',forms:'Formulare',required:'Dieses Feld muss ausgefüllt werden',done:'Formular fertig!',ready:'Ihr ausgefülltes Formular ist bereit zum Herunterladen.',step:'Schritt',of:'von',docs:'Benötigte Dokumente',docsQ:'Haben Sie diese Dokumente bereit?',where:'Wo abgeben?',summary:'Ihre Angaben:',privacy:'Datenschutz ist uns wichtig. Ihre Daten werden nicht gespeichert.',cat_sozial:'Sozialleistungen',cat_familie:'Familie & Kinder',cat_melde:'Meldewesen'},
-  en:{tagline:'Your helper for German forms',desc:'We help you fill out German official forms easily and correctly. Step by step, in your language.',selectForm:'Select form',glossary:'Glossary',step1:'Choose form',step2:'Answer questions',step3:'Download form',next:'Next',back:'Back',submit:'Submit',download:'Download',home:'Home',forms:'Forms',required:'This field is required',done:'Form completed!',ready:'Your filled form is ready for download.',step:'Step',of:'of',docs:'Required documents',docsQ:'Do you have these documents ready?',where:'Where to submit?',summary:'Your answers:',privacy:'Privacy matters. Your data is not stored.',cat_sozial:'Social benefits',cat_familie:'Family & Children',cat_melde:'Registration'},
-  ar:{tagline:'مساعدك لملء النماذج الألمانية',desc:'نساعدك في ملء النماذج الرسمية الألمانية بسهولة وبشكل صحيح. خطوة بخطوة، بلغتك.',selectForm:'اختر النموذج',glossary:'المصطلحات',step1:'اختر النموذج',step2:'أجب على الأسئلة',step3:'حمّل النموذج',next:'التالي',back:'رجوع',submit:'إرسال',download:'تحميل',home:'الرئيسية',forms:'النماذج',required:'هذا الحقل مطلوب',done:'تم ملء النموذج!',ready:'النموذج المملوء جاهز للتحميل.',step:'خطوة',of:'من',docs:'المستندات المطلوبة',docsQ:'هل لديك هذه المستندات جاهزة؟',where:'أين تقدم؟',summary:'إجاباتك:',privacy:'خصوصيتك مهمة. بياناتك لا تُخزَّن.',cat_sozial:'المزايا الاجتماعية',cat_familie:'العائلة والأطفال',cat_melde:'التسجيل'},
-  tr:{tagline:'Alman formları için yardımcınız',desc:'Alman resmi formlarını kolay ve doğru bir şekilde doldurmanıza yardımcı oluyoruz. Adım adım, kendi dilinizde.',selectForm:'Form seçin',glossary:'Sözlük',step1:'Form seçin',step2:'Soruları cevaplayın',step3:'Formu indirin',next:'İleri',back:'Geri',submit:'Gönder',download:'İndir',home:'Ana Sayfa',forms:'Formlar',required:'Bu alan zorunludur',done:'Form tamamlandı!',ready:'Doldurulmuş formunuz indirmeye hazır.',step:'Adım',of:'/',docs:'Gerekli belgeler',docsQ:'Bu belgeleri hazırladınız mı?',where:'Nereye teslim edilir?',summary:'Cevaplarınız:',privacy:'Gizliliğiniz önemlidir. Verileriniz saklanmaz.',cat_sozial:'Sosyal yardımlar',cat_familie:'Aile ve Çocuklar',cat_melde:'İkamet kaydı'},
-  uk:{tagline:'Ваш помічник для німецьких форм',desc:'Ми допоможемо вам легко та правильно заповнити німецькі офіційні форми. Крок за кроком, вашою мовою.',selectForm:'Оберіть форму',glossary:'Глосарій',step1:'Оберіть форму',step2:'Дайте відповіді',step3:'Завантажте форму',next:'Далі',back:'Назад',submit:'Надіслати',download:'Завантажити',home:'Головна',forms:'Форми',required:"Це поле обов'язкове",done:'Форму заповнено!',ready:'Ваша заповнена форма готова до завантаження.',step:'Крок',of:'з',docs:'Необхідні документи',docsQ:'Чи є у вас ці документи?',where:'Куди подавати?',summary:'Ваші відповіді:',privacy:'Конфіденційність важлива. Ваші дані не зберігаються.',cat_sozial:'Соціальні виплати',cat_familie:"Сім'я та діти",cat_melde:'Реєстрація'},
-  fr:{tagline:'Votre aide pour les formulaires allemands',desc:'Nous vous aidons à remplir facilement et correctement les formulaires officiels allemands. Étape par étape, dans votre langue.',selectForm:'Choisir le formulaire',glossary:'Glossaire',step1:'Choisir le formulaire',step2:'Répondre aux questions',step3:'Télécharger',next:'Suivant',back:'Retour',submit:'Envoyer',download:'Télécharger',home:'Accueil',forms:'Formulaires',required:'Ce champ est obligatoire',done:'Formulaire terminé !',ready:'Votre formulaire rempli est prêt à être téléchargé.',step:'Étape',of:'sur',docs:'Documents requis',docsQ:'Avez-vous ces documents prêts ?',where:'Où déposer ?',summary:'Vos réponses :',privacy:'Votre vie privée compte. Vos données ne sont pas stockées.',cat_sozial:'Prestations sociales',cat_familie:'Famille et enfants',cat_melde:'Enregistrement'},
-  fa:{tagline:'دستیار شما برای فرم‌های آلمانی',desc:'ما به شما کمک می‌کنیم فرم‌های رسمی آلمانی را به آسانی و به درستی پر کنید. مرحله به مرحله، به زبان خودتان.',selectForm:'فرم را انتخاب کنید',glossary:'واژه‌نامه',step1:'فرم را انتخاب کنید',step2:'به سؤالات پاسخ دهید',step3:'فرم را دانلود کنید',next:'بعدی',back:'قبلی',submit:'ارسال',download:'دانلود',home:'صفحه اصلی',forms:'فرم‌ها',required:'این فیلد الزامی است',done:'فرم تکمیل شد!',ready:'فرم پر شده شما آماده دانلود است.',step:'مرحله',of:'از',docs:'مدارک مورد نیاز',docsQ:'آیا این مدارک را آماده دارید؟',where:'کجا ارسال کنم؟',summary:'پاسخ‌های شما:',privacy:'حریم خصوصی مهم است. داده‌های شما ذخیره نمی‌شوند.',cat_sozial:'مزایای اجتماعی',cat_familie:'خانواده و کودکان',cat_melde:'ثبت نام'}
+  de:{tagline:'Ihr Helfer für deutsche Formulare',desc:'Wir helfen Ihnen, deutsche Behördenformulare einfach und richtig auszufüllen. Schritt für Schritt, in Ihrer Sprache.',selectForm:'Formular wählen',glossary:'Wörterbuch',scanBtn:'Brief scannen',step1:'Formular wählen',step2:'Fragen beantworten',step3:'Formular herunterladen',next:'Weiter',back:'Zurück',submit:'Absenden',download:'Herunterladen',home:'Startseite',forms:'Formulare',required:'Dieses Feld muss ausgefüllt werden',done:'Formular fertig!',ready:'Ihr ausgefülltes Formular ist bereit zum Herunterladen.',step:'Schritt',of:'von',docs:'Benötigte Dokumente',docsQ:'Haben Sie diese Dokumente bereit?',where:'Wo abgeben?',summary:'Ihre Angaben:',privacy:'Datenschutz ist uns wichtig. Ihre Daten werden nicht gespeichert.',cat_sozial:'Sozialleistungen',cat_familie:'Familie & Kinder',cat_melde:'Meldewesen',scanTitle:'Brief scannen',scanDesc:'Fotografieren Sie Ihren Brief oder laden Sie ein Bild hoch. Wir erkennen, was es ist und sagen Ihnen, was Sie tun müssen.',scanPhoto:'Foto aufnehmen',scanUpload:'Oder Bild hochladen (tippen)',scanAnalyzing:'Brief wird analysiert...',scanFound:'Brief erkannt!',scanNotFound:'Brief nicht erkannt',scanNotFoundDesc:'Wir konnten den Brief nicht erkennen. Bitte versuchen Sie es mit einem klareren Foto oder wählen Sie manuell ein Formular.',scanWhatIs:'Was ist das?',scanWhatToDo:'Was müssen Sie tun?',scanDocNeeded:'Diese Dokumente brauchen Sie:',scanFillForm:'Formular jetzt ausfüllen',scanTryAgain:'Nochmal versuchen',scanOr:'oder'},
+  en:{tagline:'Your helper for German forms',desc:'We help you fill out German official forms easily and correctly. Step by step, in your language.',selectForm:'Select form',glossary:'Glossary',scanBtn:'Scan letter',step1:'Choose form',step2:'Answer questions',step3:'Download form',next:'Next',back:'Back',submit:'Submit',download:'Download',home:'Home',forms:'Forms',required:'This field is required',done:'Form completed!',ready:'Your filled form is ready for download.',step:'Step',of:'of',docs:'Required documents',docsQ:'Do you have these documents ready?',where:'Where to submit?',summary:'Your answers:',privacy:'Privacy matters. Your data is not stored.',cat_sozial:'Social benefits',cat_familie:'Family & Children',cat_melde:'Registration',scanTitle:'Scan letter',scanDesc:'Take a photo of your letter or upload an image. We will recognize what it is and tell you what to do.',scanPhoto:'Take photo',scanUpload:'Or upload image (tap here)',scanAnalyzing:'Analyzing letter...',scanFound:'Letter recognized!',scanNotFound:'Letter not recognized',scanNotFoundDesc:'We could not recognize this letter. Please try a clearer photo or select a form manually.',scanWhatIs:'What is this?',scanWhatToDo:'What do you need to do?',scanDocNeeded:'Documents you need:',scanFillForm:'Fill out form now',scanTryAgain:'Try again',scanOr:'or'},
+  ar:{tagline:'مساعدك لملء النماذج الألمانية',desc:'نساعدك في ملء النماذج الرسمية الألمانية بسهولة وبشكل صحيح. خطوة بخطوة، بلغتك.',selectForm:'اختر النموذج',glossary:'المصطلحات',scanBtn:'مسح الرسالة',step1:'اختر النموذج',step2:'أجب على الأسئلة',step3:'حمّل النموذج',next:'التالي',back:'رجوع',submit:'إرسال',download:'تحميل',home:'الرئيسية',forms:'النماذج',required:'هذا الحقل مطلوب',done:'تم ملء النموذج!',ready:'النموذج المملوء جاهز للتحميل.',step:'خطوة',of:'من',docs:'المستندات المطلوبة',docsQ:'هل لديك هذه المستندات جاهزة؟',where:'أين تقدم؟',summary:'إجاباتك:',privacy:'خصوصيتك مهمة. بياناتك لا تُخزَّن.',cat_sozial:'المزايا الاجتماعية',cat_familie:'العائلة والأطفال',cat_melde:'التسجيل',scanTitle:'مسح الرسالة',scanDesc:'صوّر رسالتك أو ارفع صورة. سنتعرف عليها ونخبرك بما يجب فعله.',scanPhoto:'التقاط صورة',scanUpload:'أو ارفع صورة (اضغط هنا)',scanAnalyzing:'جاري تحليل الرسالة...',scanFound:'تم التعرف على الرسالة!',scanNotFound:'لم يتم التعرف على الرسالة',scanNotFoundDesc:'لم نتمكن من التعرف على هذه الرسالة. حاول بصورة أوضح أو اختر نموذجًا يدويًا.',scanWhatIs:'ما هذا؟',scanWhatToDo:'ماذا عليك أن تفعل؟',scanDocNeeded:'المستندات التي تحتاجها:',scanFillForm:'املأ النموذج الآن',scanTryAgain:'حاول مرة أخرى',scanOr:'أو'},
+  tr:{tagline:'Alman formları için yardımcınız',desc:'Alman resmi formlarını kolay ve doğru bir şekilde doldurmanıza yardımcı oluyoruz. Adım adım, kendi dilinizde.',selectForm:'Form seçin',glossary:'Sözlük',scanBtn:'Mektup tara',step1:'Form seçin',step2:'Soruları cevaplayın',step3:'Formu indirin',next:'İleri',back:'Geri',submit:'Gönder',download:'İndir',home:'Ana Sayfa',forms:'Formlar',required:'Bu alan zorunludur',done:'Form tamamlandı!',ready:'Doldurulmuş formunuz indirmeye hazır.',step:'Adım',of:'/',docs:'Gerekli belgeler',docsQ:'Bu belgeleri hazırladınız mı?',where:'Nereye teslim edilir?',summary:'Cevaplarınız:',privacy:'Gizliliğiniz önemlidir. Verileriniz saklanmaz.',cat_sozial:'Sosyal yardımlar',cat_familie:'Aile ve Çocuklar',cat_melde:'İkamet kaydı',scanTitle:'Mektup tara',scanDesc:'Mektubunuzun fotoğrafını çekin veya bir resim yükleyin.',scanPhoto:'Fotoğraf çek',scanUpload:'Veya resim yükle',scanAnalyzing:'Mektup analiz ediliyor...',scanFound:'Mektup tanındı!',scanNotFound:'Mektup tanınamadı',scanNotFoundDesc:'Daha net bir fotoğraf deneyin veya manuel bir form seçin.',scanWhatIs:'Bu nedir?',scanWhatToDo:'Ne yapmanız gerekiyor?',scanDocNeeded:'Gerekli belgeler:',scanFillForm:'Formu şimdi doldurun',scanTryAgain:'Tekrar dene',scanOr:'veya'},
+  uk:{tagline:'Ваш помічник для німецьких форм',desc:'Ми допоможемо вам легко та правильно заповнити німецькі офіційні форми. Крок за кроком, вашою мовою.',selectForm:'Оберіть форму',glossary:'Глосарій',scanBtn:'Сканувати лист',step1:'Оберіть форму',step2:'Дайте відповіді',step3:'Завантажте форму',next:'Далі',back:'Назад',submit:'Надіслати',download:'Завантажити',home:'Головна',forms:'Форми',required:"Це поле обов'язкове",done:'Форму заповнено!',ready:'Ваша заповнена форма готова до завантаження.',step:'Крок',of:'з',docs:'Необхідні документи',docsQ:'Чи є у вас ці документи?',where:'Куди подавати?',summary:'Ваші відповіді:',privacy:'Конфіденційність важлива. Ваші дані не зберігаються.',cat_sozial:'Соціальні виплати',cat_familie:"Сім'я та діти",cat_melde:'Реєстрація',scanTitle:'Сканувати лист',scanDesc:'Сфотографуйте лист або завантажте зображення.',scanPhoto:'Зробити фото',scanUpload:'Або завантажити зображення',scanAnalyzing:'Аналізуємо лист...',scanFound:'Лист розпізнано!',scanNotFound:'Лист не розпізнано',scanNotFoundDesc:'Спробуйте чіткіше фото або оберіть форму вручну.',scanWhatIs:'Що це?',scanWhatToDo:'Що потрібно зробити?',scanDocNeeded:'Необхідні документи:',scanFillForm:'Заповнити форму зараз',scanTryAgain:'Спробувати ще',scanOr:'або'},
+  fr:{tagline:'Votre aide pour les formulaires allemands',desc:'Nous vous aidons à remplir facilement et correctement les formulaires officiels allemands. Étape par étape, dans votre langue.',selectForm:'Choisir le formulaire',glossary:'Glossaire',scanBtn:'Scanner lettre',step1:'Choisir le formulaire',step2:'Répondre aux questions',step3:'Télécharger',next:'Suivant',back:'Retour',submit:'Envoyer',download:'Télécharger',home:'Accueil',forms:'Formulaires',required:'Ce champ est obligatoire',done:'Formulaire terminé !',ready:'Votre formulaire rempli est prêt à être téléchargé.',step:'Étape',of:'sur',docs:'Documents requis',docsQ:'Avez-vous ces documents prêts ?',where:'Où déposer ?',summary:'Vos réponses :',privacy:'Votre vie privée compte. Vos données ne sont pas stockées.',cat_sozial:'Prestations sociales',cat_familie:'Famille et enfants',cat_melde:'Enregistrement',scanTitle:'Scanner lettre',scanDesc:'Photographiez votre lettre ou importez une image.',scanPhoto:'Prendre photo',scanUpload:'Ou importer une image',scanAnalyzing:'Analyse en cours...',scanFound:'Lettre reconnue !',scanNotFound:'Lettre non reconnue',scanNotFoundDesc:'Essayez une photo plus nette ou choisissez un formulaire manuellement.',scanWhatIs:'Qu\'est-ce que c\'est ?',scanWhatToDo:'Que devez-vous faire ?',scanDocNeeded:'Documents requis :',scanFillForm:'Remplir le formulaire',scanTryAgain:'Réessayer',scanOr:'ou'},
+  fa:{tagline:'دستیار شما برای فرم‌های آلمانی',desc:'ما به شما کمک می‌کنیم فرم‌های رسمی آلمانی را به آسانی و به درستی پر کنید. مرحله به مرحله، به زبان خودتان.',selectForm:'فرم را انتخاب کنید',glossary:'واژه‌نامه',scanBtn:'اسکن نامه',step1:'فرم را انتخاب کنید',step2:'به سؤالات پاسخ دهید',step3:'فرم را دانلود کنید',next:'بعدی',back:'قبلی',submit:'ارسال',download:'دانلود',home:'صفحه اصلی',forms:'فرم‌ها',required:'این فیلد الزامی است',done:'فرم تکمیل شد!',ready:'فرم پر شده شما آماده دانلود است.',step:'مرحله',of:'از',docs:'مدارک مورد نیاز',docsQ:'آیا این مدارک را آماده دارید؟',where:'کجا ارسال کنم؟',summary:'پاسخ‌های شما:',privacy:'حریم خصوصی مهم است. داده‌های شما ذخیره نمی‌شوند.',cat_sozial:'مزایای اجتماعی',cat_familie:'خانواده و کودکان',cat_melde:'ثبت نام',scanTitle:'اسکن نامه',scanDesc:'از نامه خود عکس بگیرید یا تصویر بارگذاری کنید.',scanPhoto:'عکس گرفتن',scanUpload:'یا بارگذاری تصویر',scanAnalyzing:'در حال تحلیل نامه...',scanFound:'نامه شناسایی شد!',scanNotFound:'نامه شناسایی نشد',scanNotFoundDesc:'عکس واضح‌تری بگیرید یا فرم را دستی انتخاب کنید.',scanWhatIs:'این چیست؟',scanWhatToDo:'چه باید بکنید؟',scanDocNeeded:'مدارک مورد نیاز:',scanFillForm:'فرم را پر کنید',scanTryAgain:'دوباره امتحان کنید',scanOr:'یا'}
 };
 
 var forms = [
@@ -169,6 +188,59 @@ var glossary = [
   {term:'Bürgeramt',ex:{de:'Das Amt in Ihrer Stadt für Anmeldung, Ausweis und andere Verwaltungssachen.',en:'The office in your city for registration, ID, and other administrative tasks.',ar:'المكتب في مدينتك للتسجيل والهوية والأمور الإدارية.',tr:'Şehrinizdeki kayıt ve kimlik işleri ofisi.',uk:'Офіс для реєстрації, посвідчення та інших справ.',fr:'Le bureau pour inscription, pièce d\'identité et démarches administratives.',fa:'اداره شهر برای ثبت نام، کارت شناسایی و امور اداری.'}}
 ];
 
+// ========== LETTER RECOGNITION DATABASE ==========
+var letters = [
+  {
+    id:'buergergeld_bescheid',
+    keywords:['jobcenter','bürgergeld','sgb ii','sgb 2','grundsicherung','arbeitsuchende','regelleistung','bewilligungsbescheid','leistungsbescheid','weiterbewilligung','kosten der unterkunft','regelbedarf','hartz'],
+    formId:'buergergeld',
+    whatIs:{de:'Ein Brief vom Jobcenter über Bürgergeld (früher Hartz IV). Das ist finanzielle Hilfe für Menschen, die arbeitslos sind oder wenig verdienen.',en:'A letter from the Jobcenter about Bürgergeld (citizen\'s benefit). This is financial help for unemployed or low-income people.',ar:'رسالة من مركز العمل حول إعانة المواطن. هذه مساعدة مالية للعاطلين عن العمل.',tr:'İş Merkezinden Bürgergeld hakkında bir mektup. İşsizler için mali yardım.',uk:'Лист від центру зайнятості про допомогу громадянам. Фінансова допомога для безробітних.',fr:'Une lettre du Jobcenter concernant l\'allocation citoyenne. Aide financière pour les chômeurs.',fa:'نامه‌ای از مرکز کاریابی درباره کمک هزینه شهروندی. کمک مالی برای بیکاران.'},
+    whatToDo:{de:'Lesen Sie den Bescheid genau. Prüfen Sie die Beträge. Wenn etwas nicht stimmt, können Sie innerhalb von 1 Monat Widerspruch einlegen. Bringen Sie fehlende Unterlagen zum Jobcenter.',en:'Read the notice carefully. Check the amounts. If something is wrong, you can appeal within 1 month. Bring missing documents to the Jobcenter.',ar:'اقرأ الإشعار بعناية. تحقق من المبالغ. إذا كان هناك خطأ، يمكنك الاعتراض خلال شهر واحد.',tr:'Bildirimi dikkatlice okuyun. Tutarları kontrol edin. Yanlış bir şey varsa 1 ay içinde itiraz edebilirsiniz.',uk:'Уважно прочитайте повідомлення. Перевірте суми. Якщо щось не так, можете оскаржити протягом 1 місяця.',fr:'Lisez attentivement l\'avis. Vérifiez les montants. En cas d\'erreur, vous pouvez faire appel dans un délai d\'1 mois.',fa:'اطلاعیه را با دقت بخوانید. مبالغ را بررسی کنید. اگر اشتباهی وجود دارد، می‌توانید ظرف 1 ماه اعتراض کنید.'}
+  },
+  {
+    id:'kindergeld_bescheid',
+    keywords:['familienkasse','kindergeld','kinderzuschlag','bundesagentur für arbeit','kg-nummer','kindergeldnummer','zahlungsanweisung kind'],
+    formId:'kindergeld',
+    whatIs:{de:'Ein Brief von der Familienkasse über Kindergeld. Sie bekommen 250€ pro Kind pro Monat.',en:'A letter from the Family Benefits Office about child benefit. You receive €250 per child per month.',ar:'رسالة من مكتب الأسرة حول إعانة الأطفال. تحصل على 250 يورو لكل طفل شهريًا.',tr:'Aile Yardımları Ofisinden çocuk parası hakkında bir mektup. Çocuk başına aylık 250€ alırsınız.',uk:'Лист від Сімейної каси про дитячу допомогу. Ви отримуєте 250€ на дитину на місяць.',fr:'Une lettre de la Caisse d\'allocations familiales. Vous recevez 250€ par enfant par mois.',fa:'نامه‌ای از اداره خانواده درباره کمک هزینه کودک. ماهانه 250 یورو به ازای هر کودک.'},
+    whatToDo:{de:'Prüfen Sie ob alle Kinder aufgeführt sind. Prüfen Sie die Kontodaten. Melden Sie Änderungen (Umzug, Geburt, Kind wird 18) der Familienkasse.',en:'Check if all children are listed. Check bank details. Report changes (moving, birth, child turns 18) to the Family Benefits Office.',ar:'تحقق من إدراج جميع الأطفال. تحقق من البيانات البنكية. أبلغ عن التغييرات للمكتب.',tr:'Tüm çocukların listelenip listelenmediğini kontrol edin. Banka bilgilerini kontrol edin.',uk:'Перевірте, чи всі діти вказані. Перевірте банківські дані. Повідомте про зміни.',fr:'Vérifiez que tous les enfants sont listés. Vérifiez les coordonnées bancaires.',fa:'بررسی کنید همه فرزندان ذکر شده‌اند. اطلاعات بانکی را بررسی کنید.'}
+  },
+  {
+    id:'anmeldung_brief',
+    keywords:['bürgeramt','einwohnermeldeamt','meldebehörde','anmeldung','ummeldung','abmeldung','meldebestätigung','meldebescheinigung','wohnsitz'],
+    formId:'anmeldung',
+    whatIs:{de:'Ein Brief vom Bürgeramt über Ihre Wohnanmeldung. Nach jedem Umzug müssen Sie sich innerhalb von 14 Tagen anmelden.',en:'A letter from the Citizens\' Office about your residence registration. After every move, you must register within 14 days.',ar:'رسالة من مكتب المواطنين حول تسجيل إقامتك. بعد كل انتقال، يجب التسجيل خلال 14 يومًا.',tr:'Vatandaş Ofisinden ikamet kaydınız hakkında bir mektup. Her taşınmadan sonra 14 gün içinde kayıt yaptırmalısınız.',uk:'Лист від бюро громадян про реєстрацію проживання. Після кожного переїзду потрібно зареєструватися протягом 14 днів.',fr:'Une lettre du bureau des citoyens concernant votre enregistrement. Après chaque déménagement, inscrivez-vous dans les 14 jours.',fa:'نامه‌ای از اداره شهروندان درباره ثبت محل سکونت. پس از هر نقل مکان باید ظرف 14 روز ثبت نام کنید.'},
+    whatToDo:{de:'Gehen Sie persönlich zum Bürgeramt. Buchen Sie vorher einen Termin online. Bringen Sie Ausweis, Mietvertrag und Wohnungsgeberbestätigung mit.',en:'Go to the Citizens\' Office in person. Book an appointment online first. Bring your ID, rental agreement, and landlord confirmation.',ar:'اذهب شخصيًا إلى مكتب المواطنين. احجز موعدًا أولاً. أحضر هويتك وعقد الإيجار وتأكيد المالك.',tr:'Vatandaş Ofisine şahsen gidin. Önce çevrimiçi randevu alın. Kimlik, kira sözleşmesi ve ev sahibi onayını getirin.',uk:'Відвідайте бюро громадян особисто. Заздалегідь запишіться онлайн. Візьміть посвідчення, договір оренди та підтвердження від орендодавця.',fr:'Rendez-vous en personne au bureau des citoyens. Réservez un rendez-vous en ligne. Apportez votre pièce d\'identité, bail et confirmation du propriétaire.',fa:'شخصاً به اداره شهروندان بروید. ابتدا آنلاین وقت رزرو کنید. کارت شناسایی، قرارداد اجاره و تأییدیه صاحبخانه را ببرید.'}
+  },
+  {
+    id:'finanzamt_brief',
+    keywords:['finanzamt','steuerbescheid','einkommensteuer','steuererklärung','steuer-id','identifikationsnummer','lohnsteuer','steuernummer'],
+    formId:null,
+    whatIs:{de:'Ein Brief vom Finanzamt über Steuern. Das Finanzamt berechnet, wie viel Steuern Sie zahlen oder zurückbekommen.',en:'A letter from the tax office about taxes. The tax office calculates how much tax you pay or get back.',ar:'رسالة من مكتب الضرائب. يحسب مكتب الضرائب مقدار الضرائب التي تدفعها أو تستردها.',tr:'Vergi dairesinden vergiler hakkında bir mektup. Ne kadar vergi ödediğinizi veya geri aldığınızı hesaplar.',uk:'Лист від податкової про податки. Податкова розраховує, скільки податків ви платите або отримуєте назад.',fr:'Une lettre du bureau des impôts concernant les taxes.',fa:'نامه‌ای از اداره مالیات درباره مالیات.'},
+    whatToDo:{de:'Bewahren Sie den Brief gut auf. Wenn es ein Steuerbescheid ist: Prüfen Sie die Beträge. Sie haben 1 Monat Zeit für einen Einspruch. Bei der Steuer-ID: Bewahren Sie die Nummer sicher auf - Sie brauchen sie für viele Anträge.',en:'Keep the letter safe. If it\'s a tax assessment: check the amounts. You have 1 month to appeal. For your tax ID: keep the number safe - you need it for many applications.',ar:'احتفظ بالرسالة. إذا كان تقييمًا ضريبيًا: تحقق من المبالغ. لديك شهر واحد للاعتراض. احتفظ بالرقم الضريبي - ستحتاجه.',tr:'Mektubu saklayın. Vergi değerlendirmesiyse: tutarları kontrol edin. 1 ay itiraz süreniz var. Vergi numaranızı güvenli saklayın.',uk:'Збережіть лист. Якщо це податкове повідомлення: перевірте суми. У вас є 1 місяць на оскарження. Зберігайте податковий номер.',fr:'Conservez la lettre. Si c\'est un avis d\'imposition: vérifiez les montants. Vous avez 1 mois pour faire appel.',fa:'نامه را نگه دارید. اگر ارزیابی مالیاتی است: مبالغ را بررسی کنید. 1 ماه فرصت اعتراض دارید.'}
+  },
+  {
+    id:'auslaenderbehoerde',
+    keywords:['ausländerbehörde','aufenthaltstitel','aufenthaltserlaubnis','niederlassungserlaubnis','blaue karte','visum','abschiebung','duldung','asyl','flüchtling','integration','integrationskurs','aufenthalt'],
+    formId:null,
+    whatIs:{de:'Ein Brief von der Ausländerbehörde über Ihren Aufenthalt in Deutschland. Die Ausländerbehörde entscheidet über Ihren Aufenthaltstitel.',en:'A letter from the Immigration Office about your stay in Germany. The Immigration Office decides about your residence permit.',ar:'رسالة من مكتب الأجانب حول إقامتك في ألمانيا. يقرر مكتب الأجانب بشأن تصريح إقامتك.',tr:'Yabancılar Dairesinden Almanya\'daki ikametiniz hakkında bir mektup.',uk:'Лист від міграційної служби про ваше перебування в Німеччині.',fr:'Une lettre de l\'Office des étrangers concernant votre séjour en Allemagne.',fa:'نامه‌ای از اداره مهاجرت درباره اقامت شما در آلمان.'},
+    whatToDo:{de:'WICHTIG: Reagieren Sie schnell auf diesen Brief! Lesen Sie die Fristen genau. Gehen Sie zu einer Beratungsstelle (z.B. Caritas, Diakonie, AWO) - die helfen kostenlos. Bringen Sie den Brief und alle Dokumente mit.',en:'IMPORTANT: Respond quickly! Read the deadlines carefully. Go to a counseling center (e.g. Caritas, Diakonie, AWO) - they help for free. Bring the letter and all documents.',ar:'مهم: استجب بسرعة! اقرأ المواعيد النهائية بعناية. اذهب إلى مركز استشاري (مثل كاريتاس) - يساعدون مجانًا.',tr:'ÖNEMLİ: Hızlı yanıt verin! Son tarihleri dikkatlice okuyun. Bir danışma merkezine gidin - ücretsiz yardım ederler.',uk:'ВАЖЛИВО: Реагуйте швидко! Уважно прочитайте терміни. Зверніться до консультаційного центру - вони допоможуть безкоштовно.',fr:'IMPORTANT: Répondez rapidement ! Lisez les délais attentivement. Allez dans un centre de conseil - aide gratuite.',fa:'مهم: سریع پاسخ دهید! مهلت‌ها را با دقت بخوانید. به مرکز مشاوره بروید - کمک رایگان ارائه می‌دهند.'}
+  },
+  {
+    id:'krankenkasse',
+    keywords:['krankenkasse','krankenversicherung','gesundheitskarte','versichertenkarte','aok','tk','barmer','dak','ik-nummer','versicherungsnummer','beitrag','zuzahlung'],
+    formId:null,
+    whatIs:{de:'Ein Brief von Ihrer Krankenversicherung. In Deutschland muss jeder eine Krankenversicherung haben.',en:'A letter from your health insurance. In Germany, everyone must have health insurance.',ar:'رسالة من تأمينك الصحي. في ألمانيا، يجب على الجميع أن يكون لديهم تأمين صحي.',tr:'Sağlık sigortanızdan bir mektup. Almanya\'da herkesin sağlık sigortası olmalıdır.',uk:'Лист від вашої медичної страхової. В Німеччині кожен повинен мати медичне страхування.',fr:'Une lettre de votre assurance maladie. En Allemagne, tout le monde doit avoir une assurance maladie.',fa:'نامه‌ای از بیمه درمانی شما. در آلمان همه باید بیمه درمانی داشته باشند.'},
+    whatToDo:{de:'Bewahren Sie Ihre Versichertenkarte sicher auf. Bei Arztbesuchen immer die Karte mitbringen. Prüfen Sie ob Sie Zuzahlungen leisten müssen.',en:'Keep your insurance card safe. Always bring it to doctor visits. Check if you need to make co-payments.',ar:'احتفظ ببطاقة التأمين. أحضرها دائمًا عند زيارة الطبيب. تحقق من المدفوعات المشتركة.',tr:'Sigorta kartınızı güvenli saklayın. Doktor ziyaretlerinde her zaman yanınızda bulundurun.',uk:'Зберігайте страхову картку. Завжди беріть її до лікаря. Перевірте доплати.',fr:'Conservez votre carte d\'assurance. Apportez-la toujours chez le médecin.',fa:'کارت بیمه خود را نگه دارید. همیشه آن را به مطب ببرید.'}
+  },
+  {
+    id:'gez_rundfunk',
+    keywords:['rundfunkbeitrag','beitragsservice','ard','zdf','deutschlandradio','gez','rundfunk','beitragsnummer','18,36'],
+    formId:null,
+    whatIs:{de:'Ein Brief über den Rundfunkbeitrag (GEZ). Jeder Haushalt in Deutschland muss 18,36€ pro Monat für Radio und Fernsehen zahlen.',en:'A letter about the broadcasting fee (GEZ). Every household in Germany must pay €18.36/month for radio and TV.',ar:'رسالة عن رسوم البث. كل أسرة في ألمانيا يجب أن تدفع 18.36€ شهريًا للراديو والتلفزيون.',tr:'Yayın ücreti hakkında bir mektup. Almanya\'daki her hane radyo ve TV için aylık 18,36€ ödemek zorundadır.',uk:'Лист про внесок за радіомовлення. Кожне домогосподарство в Німеччині має платити 18,36€ на місяць.',fr:'Une lettre concernant la redevance audiovisuelle. Chaque foyer doit payer 18,36€/mois.',fa:'نامه‌ای درباره هزینه رادیو و تلویزیون. هر خانوار ماهانه 18.36 یورو می‌پردازد.'},
+    whatToDo:{de:'Sie müssen sich anmelden und den Beitrag zahlen. Wenn Sie Bürgergeld bekommen, können Sie eine Befreiung beantragen! Dafür brauchen Sie Ihren Leistungsbescheid vom Jobcenter.',en:'You must register and pay the fee. If you receive Bürgergeld, you can apply for an exemption! You need your benefit notice from the Jobcenter.',ar:'يجب عليك التسجيل ودفع الرسوم. إذا كنت تتلقى إعانة المواطن، يمكنك طلب إعفاء!',tr:'Kayıt olup ücreti ödemeniz gerekir. Bürgergeld alıyorsanız muafiyet başvurusunda bulunabilirsiniz!',uk:'Ви повинні зареєструватися і платити внесок. Якщо отримуєте допомогу, можете подати заяву на звільнення!',fr:'Vous devez vous inscrire et payer. Si vous recevez le Bürgergeld, vous pouvez demander une exemption!',fa:'باید ثبت نام کنید و هزینه را بپردازید. اگر کمک هزینه شهروندی دریافت می‌کنید، می‌توانید درخواست معافیت دهید!'}
+  }
+];
+
 // ========== APP STATE ==========
 var currentView = 'home';
 var currentForm = null;
@@ -199,12 +271,14 @@ function setLang(code){
   else if(currentView==='forms') showForms();
   else if(currentView==='glossary') showGlossary();
   else if(currentView==='wizard') showWizard();
+  else if(currentView==='scan') showScan();
 }
 
 function showHome(){
   currentView='home';
   var h='<div class="hero"><h2>'+t('tagline')+'</h2><p>'+t('desc')+'</p></div>';
-  h+='<div class="actions"><button class="btn btn-blue btn-big" onclick="showForms()">'+t('selectForm')+'</button>';
+  h+='<div class="actions"><button class="btn btn-orange btn-big" onclick="showScan()">'+t('scanBtn')+'</button>';
+  h+='<button class="btn btn-blue btn-big" onclick="showForms()">'+t('selectForm')+'</button>';
   h+='<button class="btn btn-gray btn-big" onclick="showGlossary()">'+t('glossary')+'</button></div>';
   h+='<div class="steps">';
   h+='<div class="step-card"><div class="step-num">1</div><h3>'+t('step1')+'</h3></div>';
@@ -355,6 +429,163 @@ function showGlossary(){
     h+='<div class="gloss-card"><h3>'+g.term+'</h3><p>'+tObj(g.ex)+'</p></div>';
   });
   document.getElementById('main').innerHTML=h;
+}
+
+// ========== SCAN FUNCTIONS ==========
+var scanStream = null;
+
+function showScan(){
+  currentView='scan';
+  var h='<button class="back-btn" onclick="stopCamera();showHome()">&larr; '+t('home')+'</button>';
+  h+='<div class="scan-area">';
+  h+='<h2>'+t('scanTitle')+'</h2>';
+  h+='<p style="color:#64748b;margin-bottom:1.5rem">'+t('scanDesc')+'</p>';
+  h+='<div class="camera-box" id="cameraBox">';
+  h+='<video id="camVideo" autoplay playsinline></video>';
+  h+='<canvas id="camCanvas"></canvas>';
+  h+='<button class="snap-btn" id="snapBtn" onclick="takePhoto()" title="'+t('scanPhoto')+'"></button>';
+  h+='</div>';
+  h+='<p class="scan-or">'+t('scanOr')+'</p>';
+  h+='<label class="scan-upload">';
+  h+=t('scanUpload');
+  h+='<input type="file" accept="image/*" capture="environment" style="display:none" onchange="uploadPhoto(event)">';
+  h+='</label>';
+  h+='</div>';
+  h+='<div id="scanResult"></div>';
+  document.getElementById('main').innerHTML=h;
+  startCamera();
+}
+
+function startCamera(){
+  var video=document.getElementById('camVideo');
+  if(!video) return;
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+    .then(function(stream){
+      scanStream=stream;
+      video.srcObject=stream;
+    })
+    .catch(function(){
+      // Camera not available - hide camera, show upload only
+      var box=document.getElementById('cameraBox');
+      if(box) box.style.display='none';
+    });
+  } else {
+    var box=document.getElementById('cameraBox');
+    if(box) box.style.display='none';
+  }
+}
+
+function stopCamera(){
+  if(scanStream){
+    scanStream.getTracks().forEach(function(track){track.stop();});
+    scanStream=null;
+  }
+}
+
+function takePhoto(){
+  var video=document.getElementById('camVideo');
+  var canvas=document.getElementById('camCanvas');
+  if(!video||!canvas) return;
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  stopCamera();
+  // Show captured image
+  var img=canvas.toDataURL('image/jpeg');
+  var box=document.getElementById('cameraBox');
+  box.innerHTML='<img src="'+img+'" class="scan-preview">';
+  // Simulate OCR analysis
+  simulateAnalysis(img);
+}
+
+function uploadPhoto(event){
+  var file=event.target.files[0];
+  if(!file) return;
+  stopCamera();
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=e.target.result;
+    var box=document.getElementById('cameraBox');
+    if(box){
+      box.innerHTML='<img src="'+img+'" class="scan-preview">';
+      box.style.display='block';
+    }
+    simulateAnalysis(img);
+  };
+  reader.readAsDataURL(file);
+}
+
+function simulateAnalysis(imgData){
+  var resultDiv=document.getElementById('scanResult');
+  resultDiv.innerHTML='<div class="scan-area" style="text-align:center"><p>'+t('scanAnalyzing')+'</p></div>';
+
+  // Simulate OCR delay, then show manual selection since we can't do real OCR in a standalone HTML
+  setTimeout(function(){
+    showLetterSelection();
+  }, 1500);
+}
+
+function showLetterSelection(){
+  var resultDiv=document.getElementById('scanResult');
+  var h='<div class="scan-area">';
+  h+='<h3 style="margin-bottom:1rem">'+(lang==='de'?'Von wem ist der Brief?':'Who is the letter from?')+'</h3>';
+  h+='<p style="color:#64748b;margin-bottom:1rem">'+(lang==='de'?'Tippen Sie auf den Absender, der auf Ihrem Brief steht:':'Tap the sender shown on your letter:')+'</p>';
+
+  var senders=[
+    {id:0,label:{de:'Jobcenter',en:'Jobcenter',ar:'مركز العمل',tr:'İş Merkezi',uk:'Центр зайнятості',fr:'Jobcenter',fa:'مرکز کاریابی'}},
+    {id:1,label:{de:'Familienkasse',en:'Family Benefits Office',ar:'مكتب الأسرة',tr:'Aile Yardımları',uk:'Сімейна каса',fr:'Caisse d\'allocations',fa:'اداره خانواده'}},
+    {id:2,label:{de:'Bürgeramt / Einwohnermeldeamt',en:'Citizens\' Office',ar:'مكتب المواطنين',tr:'Vatandaş Ofisi',uk:'Бюро громадян',fr:'Bureau des citoyens',fa:'اداره شهروندان'}},
+    {id:3,label:{de:'Finanzamt',en:'Tax Office',ar:'مكتب الضرائب',tr:'Vergi Dairesi',uk:'Податкова',fr:'Bureau des impôts',fa:'اداره مالیات'}},
+    {id:4,label:{de:'Ausländerbehörde',en:'Immigration Office',ar:'مكتب الأجانب',tr:'Yabancılar Dairesi',uk:'Міграційна служба',fr:'Office des étrangers',fa:'اداره مهاجرت'}},
+    {id:5,label:{de:'Krankenkasse',en:'Health Insurance',ar:'التأمين الصحي',tr:'Sağlık Sigortası',uk:'Медична страхова',fr:'Assurance maladie',fa:'بیمه درمانی'}},
+    {id:6,label:{de:'Rundfunkbeitrag (GEZ)',en:'Broadcasting Fee (GEZ)',ar:'رسوم البث',tr:'Yayın Ücreti',uk:'Внесок за мовлення',fr:'Redevance audiovisuelle',fa:'هزینه رادیو/تلویزیون'}}
+  ];
+
+  senders.forEach(function(s){
+    h+='<div class="card" onclick="showLetterResult('+s.id+')">';
+    h+='<h3>'+tObj(s.label)+'</h3></div>';
+  });
+
+  h+='</div>';
+  resultDiv.innerHTML=h;
+}
+
+function showLetterResult(idx){
+  var letter=letters[idx];
+  var resultDiv=document.getElementById('scanResult');
+  var h='<div class="scan-result">';
+  h+='<h2>'+t('scanFound')+'</h2>';
+
+  h+='<h3>'+t('scanWhatIs')+'</h3>';
+  h+='<p>'+tObj(letter.whatIs)+'</p>';
+
+  h+='<h3>'+t('scanWhatToDo')+'</h3>';
+  h+='<p>'+tObj(letter.whatToDo)+'</p>';
+
+  // Show required docs if linked to a form
+  if(letter.formId){
+    var form=forms.find(function(f){return f.id===letter.formId});
+    if(form){
+      h+='<h3>'+t('scanDocNeeded')+'</h3><ul>';
+      var docs=form.docs[lang]||form.docs.de;
+      docs.forEach(function(d){ h+='<li>'+d+'</li>'; });
+      h+='</ul>';
+
+      h+='<div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap">';
+      h+='<button class="btn btn-blue btn-big" onclick="stopCamera();startForm('+forms.indexOf(form)+')">'+t('scanFillForm')+'</button>';
+      h+='<button class="btn btn-gray" onclick="showScan()">'+t('scanTryAgain')+'</button>';
+      h+='</div>';
+    }
+  } else {
+    h+='<div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap">';
+    h+='<button class="btn btn-blue" onclick="showForms()">'+t('selectForm')+'</button>';
+    h+='<button class="btn btn-gray" onclick="showScan()">'+t('scanTryAgain')+'</button>';
+    h+='</div>';
+  }
+
+  h+='</div>';
+  resultDiv.innerHTML=h;
 }
 
 // ========== INIT ==========
