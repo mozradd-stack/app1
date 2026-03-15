@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FormFriend - Ihr Helfer für deutsche Formulare</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f7fa;color:#333;line-height:1.6}
+.app{min-height:100vh;display:flex;flex-direction:column}
+header{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+header h1{font-size:1.5rem;cursor:pointer}
+main{flex:1;max-width:800px;width:100%;margin:0 auto;padding:2rem 1rem}
+footer{background:#1e293b;color:#94a3b8;text-align:center;padding:1rem;font-size:.85rem}
+.lang-bar{display:flex;gap:.4rem;flex-wrap:wrap}
+.lang-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:.3rem .6rem;border-radius:6px;cursor:pointer;font-size:.85rem}
+.lang-btn:hover,.lang-btn.active{background:rgba(255,255,255,.35);border-color:#fff}
+.hero{text-align:center;margin-bottom:2rem}
+.hero h2{font-size:1.8rem;color:#1e293b;margin-bottom:.75rem}
+.hero p{color:#64748b;font-size:1.05rem;max-width:600px;margin:0 auto}
+.actions{display:flex;gap:1rem;justify-content:center;margin-bottom:2.5rem;flex-wrap:wrap}
+.btn{border:none;border-radius:8px;padding:.75rem 1.5rem;font-size:1rem;cursor:pointer;font-weight:600;transition:all .2s}
+.btn-big{padding:1rem 2rem;font-size:1.1rem}
+.btn-blue{background:#2563eb;color:#fff}.btn-blue:hover{background:#1d4ed8}
+.btn-gray{background:#e2e8f0;color:#475569}.btn-gray:hover{background:#cbd5e1}
+.btn-green{background:#16a34a;color:#fff}.btn-green:hover{background:#15803d}
+.steps{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap}
+.step-card{background:#fff;border-radius:12px;padding:1.5rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08);flex:1;min-width:150px;max-width:200px}
+.step-num{width:48px;height:48px;border-radius:50%;background:#dbeafe;color:#2563eb;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;font-size:1.25rem;font-weight:700}
+.step-card h3{font-size:.95rem;color:#475569}
+.back-btn{display:inline-flex;align-items:center;gap:.5rem;color:#2563eb;cursor:pointer;font-size:.95rem;margin-bottom:1.5rem;background:none;border:none;font-weight:600}
+.back-btn:hover{color:#1d4ed8}
+.card{background:#fff;border-radius:12px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:1rem;cursor:pointer;border-left:4px solid #2563eb;transition:all .2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.card h3{color:#1e293b;margin-bottom:.5rem}
+.card p{color:#64748b;font-size:.9rem}
+.tag{display:inline-block;background:#dbeafe;color:#2563eb;padding:.2rem .6rem;border-radius:4px;font-size:.8rem;font-weight:600;margin-bottom:.5rem}
+.wizard{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden}
+.wiz-head{background:#f8fafc;padding:1.25rem;border-bottom:1px solid #e2e8f0}
+.wiz-head h2{font-size:1.25rem;color:#1e293b}
+.progress-row{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:.9rem;color:#64748b}
+.progress-bar{flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:#2563eb;border-radius:3px;transition:width .3s}
+.wiz-body{padding:2rem 1.5rem}
+.field-label{display:block;font-weight:600;color:#1e293b;margin-bottom:.5rem;font-size:1.05rem}
+.field-explain{background:#eff6ff;border-left:3px solid #2563eb;padding:.75rem 1rem;margin-bottom:.75rem;border-radius:0 6px 6px 0;color:#475569;font-size:.9rem}
+[dir=rtl] .field-explain{border-left:none;border-right:3px solid #2563eb;border-radius:6px 0 0 6px}
+[dir=rtl] .card{border-left:none;border-right:4px solid #2563eb}
+.field-input,.field-select{width:100%;padding:.75rem;border:2px solid #e2e8f0;border-radius:8px;font-size:1rem}
+.field-input:focus,.field-select:focus{outline:none;border-color:#2563eb}
+.field-err{color:#dc2626;font-size:.85rem;margin-top:.25rem}
+.wiz-foot{display:flex;justify-content:space-between;padding:1.25rem;border-top:1px solid #e2e8f0;background:#f8fafc}
+.doc-item{display:flex;align-items:center;gap:.75rem;padding:.5rem 0;color:#475569}
+.doc-item input{width:20px;height:20px;cursor:pointer}
+.sub-info{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:1rem;margin-top:1rem}
+.sub-info h3{color:#166534;margin-bottom:.5rem}
+.sub-info p{color:#15803d}
+.completion{text-align:center;padding:2rem}
+.completion h2{color:#16a34a;font-size:1.5rem;margin-bottom:1rem}
+.completion p{color:#64748b;margin-bottom:1.5rem}
+.summary-row{padding:.4rem 0;border-bottom:1px solid #e2e8f0;text-align:left}
+.gloss-card{background:#fff;border-radius:12px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:1rem}
+.gloss-card h3{color:#1e293b;margin-bottom:.5rem;font-size:1.05rem}
+.gloss-card p{color:#64748b;font-size:.95rem}
+.hidden{display:none}
+@media(max-width:640px){header{flex-direction:column;gap:.75rem}.hero h2{font-size:1.4rem}.actions{flex-direction:column;align-items:center}.steps{flex-direction:column;align-items:center}.step-card{max-width:100%}.lang-bar{justify-content:center}.wiz-body{padding:1.25rem 1rem}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <h1 onclick="showHome()">FormFriend</h1>
+    <div class="lang-bar" id="langBar"></div>
+  </header>
+  <main id="main"></main>
+  <footer id="footer"></footer>
+</div>
+
+<script>
+// ========== DATA ==========
+var lang = 'de';
+var dir = 'ltr';
+
+var langs = [
+  {code:'de',name:'Deutsch',dir:'ltr'},
+  {code:'en',name:'English',dir:'ltr'},
+  {code:'ar',name:'العربية',dir:'rtl'},
+  {code:'tr',name:'Türkçe',dir:'ltr'},
+  {code:'uk',name:'Українська',dir:'ltr'},
+  {code:'fr',name:'Français',dir:'ltr'},
+  {code:'fa',name:'فارسی',dir:'rtl'}
+];
+
+var ui = {
+  de:{tagline:'Ihr Helfer für deutsche Formulare',desc:'Wir helfen Ihnen, deutsche Behördenformulare einfach und richtig auszufüllen. Schritt für Schritt, in Ihrer Sprache.',selectForm:'Formular wählen',glossary:'Wörterbuch',step1:'Formular wählen',step2:'Fragen beantworten',step3:'Formular herunterladen',next:'Weiter',back:'Zurück',submit:'Absenden',download:'Herunterladen',home:'Startseite',forms:'Formulare',required:'Dieses Feld muss ausgefüllt werden',done:'Formular fertig!',ready:'Ihr ausgefülltes Formular ist bereit zum Herunterladen.',step:'Schritt',of:'von',docs:'Benötigte Dokumente',docsQ:'Haben Sie diese Dokumente bereit?',where:'Wo abgeben?',summary:'Ihre Angaben:',privacy:'Datenschutz ist uns wichtig. Ihre Daten werden nicht gespeichert.',cat_sozial:'Sozialleistungen',cat_familie:'Familie & Kinder',cat_melde:'Meldewesen'},
+  en:{tagline:'Your helper for German forms',desc:'We help you fill out German official forms easily and correctly. Step by step, in your language.',selectForm:'Select form',glossary:'Glossary',step1:'Choose form',step2:'Answer questions',step3:'Download form',next:'Next',back:'Back',submit:'Submit',download:'Download',home:'Home',forms:'Forms',required:'This field is required',done:'Form completed!',ready:'Your filled form is ready for download.',step:'Step',of:'of',docs:'Required documents',docsQ:'Do you have these documents ready?',where:'Where to submit?',summary:'Your answers:',privacy:'Privacy matters. Your data is not stored.',cat_sozial:'Social benefits',cat_familie:'Family & Children',cat_melde:'Registration'},
+  ar:{tagline:'مساعدك لملء النماذج الألمانية',desc:'نساعدك في ملء النماذج الرسمية الألمانية بسهولة وبشكل صحيح. خطوة بخطوة، بلغتك.',selectForm:'اختر النموذج',glossary:'المصطلحات',step1:'اختر النموذج',step2:'أجب على الأسئلة',step3:'حمّل النموذج',next:'التالي',back:'رجوع',submit:'إرسال',download:'تحميل',home:'الرئيسية',forms:'النماذج',required:'هذا الحقل مطلوب',done:'تم ملء النموذج!',ready:'النموذج المملوء جاهز للتحميل.',step:'خطوة',of:'من',docs:'المستندات المطلوبة',docsQ:'هل لديك هذه المستندات جاهزة؟',where:'أين تقدم؟',summary:'إجاباتك:',privacy:'خصوصيتك مهمة. بياناتك لا تُخزَّن.',cat_sozial:'المزايا الاجتماعية',cat_familie:'العائلة والأطفال',cat_melde:'التسجيل'},
+  tr:{tagline:'Alman formları için yardımcınız',desc:'Alman resmi formlarını kolay ve doğru bir şekilde doldurmanıza yardımcı oluyoruz. Adım adım, kendi dilinizde.',selectForm:'Form seçin',glossary:'Sözlük',step1:'Form seçin',step2:'Soruları cevaplayın',step3:'Formu indirin',next:'İleri',back:'Geri',submit:'Gönder',download:'İndir',home:'Ana Sayfa',forms:'Formlar',required:'Bu alan zorunludur',done:'Form tamamlandı!',ready:'Doldurulmuş formunuz indirmeye hazır.',step:'Adım',of:'/',docs:'Gerekli belgeler',docsQ:'Bu belgeleri hazırladınız mı?',where:'Nereye teslim edilir?',summary:'Cevaplarınız:',privacy:'Gizliliğiniz önemlidir. Verileriniz saklanmaz.',cat_sozial:'Sosyal yardımlar',cat_familie:'Aile ve Çocuklar',cat_melde:'İkamet kaydı'},
+  uk:{tagline:'Ваш помічник для німецьких форм',desc:'Ми допоможемо вам легко та правильно заповнити німецькі офіційні форми. Крок за кроком, вашою мовою.',selectForm:'Оберіть форму',glossary:'Глосарій',step1:'Оберіть форму',step2:'Дайте відповіді',step3:'Завантажте форму',next:'Далі',back:'Назад',submit:'Надіслати',download:'Завантажити',home:'Головна',forms:'Форми',required:"Це поле обов'язкове",done:'Форму заповнено!',ready:'Ваша заповнена форма готова до завантаження.',step:'Крок',of:'з',docs:'Необхідні документи',docsQ:'Чи є у вас ці документи?',where:'Куди подавати?',summary:'Ваші відповіді:',privacy:'Конфіденційність важлива. Ваші дані не зберігаються.',cat_sozial:'Соціальні виплати',cat_familie:"Сім'я та діти",cat_melde:'Реєстрація'},
+  fr:{tagline:'Votre aide pour les formulaires allemands',desc:'Nous vous aidons à remplir facilement et correctement les formulaires officiels allemands. Étape par étape, dans votre langue.',selectForm:'Choisir le formulaire',glossary:'Glossaire',step1:'Choisir le formulaire',step2:'Répondre aux questions',step3:'Télécharger',next:'Suivant',back:'Retour',submit:'Envoyer',download:'Télécharger',home:'Accueil',forms:'Formulaires',required:'Ce champ est obligatoire',done:'Formulaire terminé !',ready:'Votre formulaire rempli est prêt à être téléchargé.',step:'Étape',of:'sur',docs:'Documents requis',docsQ:'Avez-vous ces documents prêts ?',where:'Où déposer ?',summary:'Vos réponses :',privacy:'Votre vie privée compte. Vos données ne sont pas stockées.',cat_sozial:'Prestations sociales',cat_familie:'Famille et enfants',cat_melde:'Enregistrement'},
+  fa:{tagline:'دستیار شما برای فرم‌های آلمانی',desc:'ما به شما کمک می‌کنیم فرم‌های رسمی آلمانی را به آسانی و به درستی پر کنید. مرحله به مرحله، به زبان خودتان.',selectForm:'فرم را انتخاب کنید',glossary:'واژه‌نامه',step1:'فرم را انتخاب کنید',step2:'به سؤالات پاسخ دهید',step3:'فرم را دانلود کنید',next:'بعدی',back:'قبلی',submit:'ارسال',download:'دانلود',home:'صفحه اصلی',forms:'فرم‌ها',required:'این فیلد الزامی است',done:'فرم تکمیل شد!',ready:'فرم پر شده شما آماده دانلود است.',step:'مرحله',of:'از',docs:'مدارک مورد نیاز',docsQ:'آیا این مدارک را آماده دارید؟',where:'کجا ارسال کنم؟',summary:'پاسخ‌های شما:',privacy:'حریم خصوصی مهم است. داده‌های شما ذخیره نمی‌شوند.',cat_sozial:'مزایای اجتماعی',cat_familie:'خانواده و کودکان',cat_melde:'ثبت نام'}
+};
+
+var forms = [
+  {
+    id:'buergergeld',cat:'sozial',
+    name:{de:'Antrag auf Bürgergeld',en:'Application for Citizen\'s Benefit',ar:'طلب إعانة المواطن',tr:'Vatandaş Yardımı Başvurusu',uk:'Заява на допомогу громадянам',fr:'Demande d\'allocation citoyenne',fa:'درخواست کمک هزینه شهروندی'},
+    desc:{de:'Grundsicherung für Arbeitsuchende (früher Hartz IV)',en:'Basic income support for job seekers (formerly Hartz IV)',ar:'الدعم الأساسي للباحثين عن عمل',tr:'İş arayanlar için temel gelir desteği',uk:'Базова підтримка для шукачів роботи',fr:'Revenu de base pour demandeurs d\'emploi',fa:'حمایت درآمد پایه برای جویندگان کار'},
+    docs:{de:['Personalausweis oder Reisepass','Meldebescheinigung','Mietvertrag','Kontoauszüge (letzte 3 Monate)','Aufenthaltstitel (wenn nicht deutsch)','Einkommensnachweise'],en:['ID card or passport','Registration certificate','Rental agreement','Bank statements (last 3 months)','Residence permit (if not German)','Proof of income'],ar:['بطاقة الهوية أو جواز السفر','شهادة التسجيل','عقد الإيجار','كشوف الحساب البنكي (آخر 3 أشهر)','تصريح الإقامة','إثبات الدخل'],tr:['Kimlik kartı veya pasaport','İkametgah belgesi','Kira sözleşmesi','Banka hesap özeti (son 3 ay)','Oturma izni','Gelir belgesi'],uk:['Посвідчення особи або паспорт','Довідка про реєстрацію','Договір оренди','Банківські виписки (3 місяці)','Дозвіл на проживання','Підтвердження доходу'],fr:['Carte d\'identité ou passeport','Certificat d\'enregistrement','Contrat de bail','Relevés bancaires (3 mois)','Titre de séjour','Justificatifs de revenus'],fa:['کارت شناسایی یا گذرنامه','گواهی ثبت نام','قرارداد اجاره','صورت حساب بانکی (3 ماه)','مجوز اقامت','مدرک درآمد']},
+    submit:{de:'Abgabe beim zuständigen Jobcenter. Persönlich oder per Post.',en:'Submit at your local Jobcenter. In person or by mail.',ar:'تقديم في مركز العمل المحلي. شخصيًا أو بالبريد.',tr:'Yerel İş Merkezine teslim edin. Şahsen veya posta ile.',uk:'Подайте у місцевий центр зайнятості. Особисто або поштою.',fr:'Dépôt au Jobcenter local. En personne ou par courrier.',fa:'ارسال به مرکز کاریابی محلی. حضوری یا از طریق پست.'},
+    fields:[
+      {id:'familienname',type:'text',req:true,label:{de:'Familienname',en:'Last name',ar:'اسم العائلة',tr:'Soyadı',uk:'Прізвище',fr:'Nom de famille',fa:'نام خانوادگی'},explain:{de:'Ihr Nachname, wie er in Ihrem Ausweis steht.',en:'Your surname as it appears on your ID.',ar:'اسم عائلتك كما في بطاقة الهوية.',tr:'Kimliğinizde yazan soyadınız.',uk:'Ваше прізвище, як у посвідченні.',fr:'Votre nom de famille tel que sur votre pièce d\'identité.',fa:'نام خانوادگی شما مطابق کارت شناسایی.'}},
+      {id:'vorname',type:'text',req:true,label:{de:'Vorname',en:'First name',ar:'الاسم الأول',tr:'Adı',uk:'Ім\'я',fr:'Prénom',fa:'نام'},explain:{de:'Ihr Vorname, wie er in Ihrem Ausweis steht.',en:'Your first name as on your ID.',ar:'اسمك الأول كما في بطاقة الهوية.',tr:'Kimliğinizde yazan adınız.',uk:'Ваше ім\'я, як у посвідченні.',fr:'Votre prénom tel que sur votre pièce d\'identité.',fa:'نام شما مطابق کارت شناسایی.'}},
+      {id:'geburtsdatum',type:'date',req:true,label:{de:'Geburtsdatum',en:'Date of birth',ar:'تاريخ الميلاد',tr:'Doğum tarihi',uk:'Дата народження',fr:'Date de naissance',fa:'تاریخ تولد'},explain:{de:'Ihr Geburtsdatum (TT.MM.JJJJ).',en:'Your date of birth (DD.MM.YYYY).',ar:'تاريخ ميلادك.',tr:'Doğum tarihiniz.',uk:'Ваша дата народження.',fr:'Votre date de naissance.',fa:'تاریخ تولد شما.'}},
+      {id:'familienstand',type:'select',req:true,label:{de:'Familienstand',en:'Marital status',ar:'الحالة الاجتماعية',tr:'Medeni durum',uk:'Сімейний стан',fr:'État civil',fa:'وضعیت تأهل'},explain:{de:'Sind Sie verheiratet, ledig, geschieden oder verwitwet?',en:'Are you married, single, divorced, or widowed?',ar:'هل أنت متزوج، أعزب، مطلق، أو أرمل؟',tr:'Evli, bekar, boşanmış veya dul musunuz?',uk:'Ви одружені, неодружені, розлучені або овдовіли?',fr:'Êtes-vous marié(e), célibataire, divorcé(e) ou veuf/veuve ?',fa:'آیا متأهل، مجرد، مطلقه یا بیوه هستید؟'},opts:[
+        {v:'ledig',l:{de:'Ledig',en:'Single',ar:'أعزب',tr:'Bekar',uk:'Неодружений/а',fr:'Célibataire',fa:'مجرد'}},
+        {v:'verheiratet',l:{de:'Verheiratet',en:'Married',ar:'متزوج',tr:'Evli',uk:'Одружений/а',fr:'Marié(e)',fa:'متأهل'}},
+        {v:'geschieden',l:{de:'Geschieden',en:'Divorced',ar:'مطلق',tr:'Boşanmış',uk:'Розлучений/а',fr:'Divorcé(e)',fa:'مطلقه'}},
+        {v:'verwitwet',l:{de:'Verwitwet',en:'Widowed',ar:'أرمل',tr:'Dul',uk:'Овдовілий/а',fr:'Veuf/Veuve',fa:'بیوه'}}
+      ]},
+      {id:'staat',type:'text',req:true,label:{de:'Staatsangehörigkeit',en:'Nationality',ar:'الجنسية',tr:'Vatandaşlık',uk:'Громадянство',fr:'Nationalité',fa:'تابعیت'},explain:{de:'Das Land, dessen Staatsbürger Sie sind.',en:'The country you are a citizen of.',ar:'البلد الذي تحمل جنسيته.',tr:'Vatandaşı olduğunuz ülke.',uk:'Країна, громадянином якої ви є.',fr:'Le pays dont vous êtes citoyen.',fa:'کشوری که شهروند آن هستید.'}},
+      {id:'strasse',type:'text',req:true,label:{de:'Straße und Hausnummer',en:'Street and house number',ar:'الشارع ورقم المنزل',tr:'Sokak ve ev numarası',uk:'Вулиця та номер будинку',fr:'Rue et numéro',fa:'خیابان و شماره خانه'},explain:{de:'Die Adresse, an der Sie aktuell wohnen.',en:'The address where you currently live.',ar:'العنوان الذي تعيش فيه حاليًا.',tr:'Şu anda yaşadığınız adres.',uk:'Адреса, за якою ви проживаєте.',fr:'L\'adresse où vous habitez.',fa:'آدرسی که در آن زندگی می‌کنید.'}},
+      {id:'plz',type:'text',req:true,label:{de:'Postleitzahl',en:'Postal code',ar:'الرمز البريدي',tr:'Posta kodu',uk:'Поштовий індекс',fr:'Code postal',fa:'کد پستی'},explain:{de:'Die 5-stellige Postleitzahl Ihres Wohnorts.',en:'The 5-digit postal code.',ar:'الرمز البريدي المكون من 5 أرقام.',tr:'5 haneli posta kodunuz.',uk:'5-значний поштовий індекс.',fr:'Le code postal à 5 chiffres.',fa:'کد پستی 5 رقمی.'}},
+      {id:'ort',type:'text',req:true,label:{de:'Ort',en:'City',ar:'المدينة',tr:'Şehir',uk:'Місто',fr:'Ville',fa:'شهر'},explain:{de:'Der Name der Stadt, in der Sie wohnen.',en:'The city where you live.',ar:'اسم المدينة التي تعيش فيها.',tr:'Yaşadığınız şehir.',uk:'Місто, де ви живете.',fr:'La ville où vous habitez.',fa:'شهری که در آن زندگی می‌کنید.'}},
+      {id:'iban',type:'text',req:true,label:{de:'IBAN (Kontonummer)',en:'IBAN (Account number)',ar:'IBAN (رقم الحساب)',tr:'IBAN (Hesap numarası)',uk:'IBAN (Номер рахунку)',fr:'IBAN (Numéro de compte)',fa:'IBAN (شماره حساب)'},explain:{de:'Ihre internationale Bankkontonummer. Beginnt mit DE, 22 Zeichen. Steht auf Ihrer Bankkarte.',en:'Your international bank account number. Starts with DE, 22 characters. On your bank card.',ar:'رقم حسابك البنكي الدولي. يبدأ بـ DE، 22 حرفًا. على بطاقتك البنكية.',tr:'Uluslararası banka hesap numaranız. DE ile başlar, 22 karakter. Banka kartınızda.',uk:'Міжнародний номер рахунку. Починається з DE, 22 символи. На банківській картці.',fr:'Votre IBAN. Commence par DE, 22 caractères. Sur votre carte bancaire.',fa:'شماره حساب بین‌المللی. با DE شروع، 22 کاراکتر. روی کارت بانکی.'}}
+    ]
+  },
+  {
+    id:'kindergeld',cat:'familie',
+    name:{de:'Antrag auf Kindergeld',en:'Application for Child Benefit',ar:'طلب علاوة الأطفال',tr:'Çocuk Parası Başvurusu',uk:'Заява на дитячу допомогу',fr:'Demande d\'allocations familiales',fa:'درخواست کمک هزینه کودک'},
+    desc:{de:'Kindergeld bei der Familienkasse. 250€ pro Kind pro Monat.',en:'Child benefit. €250 per child per month.',ar:'إعانة الأطفال. 250 يورو لكل طفل شهريًا.',tr:'Çocuk parası. Çocuk başına aylık 250€.',uk:'Дитяча допомога. 250€ на дитину на місяць.',fr:'Allocations familiales. 250€ par enfant par mois.',fa:'کمک هزینه کودک. ماهانه 250 یورو.'},
+    docs:{de:['Geburtsurkunde des Kindes','Personalausweis/Reisepass der Eltern','Meldebescheinigung','Steuer-ID des Kindes','Steuer-ID der Eltern','Aufenthaltstitel (wenn nicht deutsch)'],en:['Child\'s birth certificate','Parents\' ID/passport','Registration certificate','Child\'s tax ID','Parents\' tax ID','Residence permit (if not German)'],ar:['شهادة ميلاد الطفل','هوية/جواز سفر الوالدين','شهادة التسجيل','الرقم الضريبي للطفل','الرقم الضريبي للوالدين','تصريح الإقامة'],tr:['Çocuğun doğum belgesi','Ebeveynlerin kimliği','İkametgah belgesi','Çocuğun vergi numarası','Ebeveynlerin vergi numarası','Oturma izni'],uk:['Свідоцтво про народження','Посвідчення батьків','Довідка про реєстрацію','Податковий номер дитини','Податковий номер батьків','Дозвіл на проживання'],fr:['Acte de naissance','Pièce d\'identité des parents','Certificat d\'enregistrement','Numéro fiscal de l\'enfant','Numéro fiscal des parents','Titre de séjour'],fa:['گواهی تولد کودک','کارت شناسایی والدین','گواهی ثبت نام','شناسه مالیاتی کودک','شناسه مالیاتی والدین','مجوز اقامت']},
+    submit:{de:'Abgabe bei der Familienkasse. Online, per Post oder persönlich.',en:'Submit at the Family Benefits Office. Online, by mail, or in person.',ar:'تقديم في مكتب الأسرة. عبر الإنترنت أو البريد أو شخصيًا.',tr:'Aile Yardımları Ofisine. Çevrimiçi, posta veya şahsen.',uk:'Подайте у Сімейну касу. Онлайн, поштою або особисто.',fr:'Dépôt à la Caisse d\'allocations. En ligne, par courrier ou en personne.',fa:'ارسال به اداره خانواده. آنلاین، پست یا حضوری.'},
+    fields:[
+      {id:'name_antrag',type:'text',req:true,label:{de:'Name des Antragstellers',en:'Applicant\'s name',ar:'اسم مقدم الطلب',tr:'Başvuru sahibinin adı',uk:'Ім\'я заявника',fr:'Nom du demandeur',fa:'نام متقاضی'},explain:{de:'Vor- und Nachname der Person, die Kindergeld beantragt (Mutter oder Vater).',en:'Full name of the person applying (mother or father).',ar:'الاسم الكامل للمتقدم (الأم أو الأب).',tr:'Başvuran kişinin tam adı (anne veya baba).',uk:'Повне ім\'я заявника (мати або батько).',fr:'Nom complet du demandeur (mère ou père).',fa:'نام کامل متقاضی (مادر یا پدر).'}},
+      {id:'steuerid',type:'text',req:true,label:{de:'Steuer-ID',en:'Tax ID',ar:'الرقم الضريبي',tr:'Vergi numarası',uk:'Податковий номер',fr:'Numéro fiscal',fa:'شناسه مالیاتی'},explain:{de:'11-stellige Nummer vom Finanzamt. Per Post bekommen nach Anmeldung in Deutschland.',en:'11-digit number from tax office. Received by mail after registering in Germany.',ar:'رقم من 11 رقمًا من مكتب الضرائب. تلقيته بالبريد عند التسجيل.',tr:'Vergi dairesinden 11 haneli numara. Kaydolduğunuzda postayla gelir.',uk:'11-значний номер від податкової. Отриманий поштою після реєстрації.',fr:'Numéro à 11 chiffres du bureau des impôts. Reçu par courrier.',fa:'شماره 11 رقمی از اداره مالیات. پس از ثبت نام دریافت شده.'}},
+      {id:'kind_name',type:'text',req:true,label:{de:'Name des Kindes',en:'Child\'s name',ar:'اسم الطفل',tr:'Çocuğun adı',uk:'Ім\'я дитини',fr:'Nom de l\'enfant',fa:'نام کودک'},explain:{de:'Vor- und Nachname Ihres Kindes (wie in der Geburtsurkunde).',en:'Your child\'s full name (as on birth certificate).',ar:'الاسم الكامل لطفلك (كما في شهادة الميلاد).',tr:'Çocuğunuzun tam adı (doğum belgesindeki gibi).',uk:'Повне ім\'я дитини (як у свідоцтві).',fr:'Nom complet de l\'enfant (acte de naissance).',fa:'نام کامل کودک (مطابق گواهی تولد).'}},
+      {id:'kind_geb',type:'date',req:true,label:{de:'Geburtsdatum des Kindes',en:'Child\'s date of birth',ar:'تاريخ ميلاد الطفل',tr:'Çocuğun doğum tarihi',uk:'Дата народження дитини',fr:'Date de naissance de l\'enfant',fa:'تاریخ تولد کودک'},explain:{de:'Wann wurde Ihr Kind geboren?',en:'When was your child born?',ar:'متى ولد طفلك؟',tr:'Çocuğunuz ne zaman doğdu?',uk:'Коли народилася ваша дитина?',fr:'Quand votre enfant est-il né ?',fa:'کودک شما کی متولد شده؟'}},
+      {id:'kind_steuerid',type:'text',req:true,label:{de:'Steuer-ID des Kindes',en:'Child\'s tax ID',ar:'الرقم الضريبي للطفل',tr:'Çocuğun vergi numarası',uk:'Податковий номер дитини',fr:'Numéro fiscal de l\'enfant',fa:'شناسه مالیاتی کودک'},explain:{de:'11-stellige Steuer-ID Ihres Kindes. Kommt automatisch per Post nach der Geburt.',en:'Child\'s 11-digit tax ID. Sent automatically by mail after birth.',ar:'الرقم الضريبي للطفل من 11 رقمًا. يُرسل تلقائيًا بعد الولادة.',tr:'Çocuğunuzun 11 haneli vergi numarası. Doğumdan sonra postayla gelir.',uk:'11-значний податковий номер дитини. Надсилається автоматично після народження.',fr:'Numéro fiscal de l\'enfant à 11 chiffres. Envoyé automatiquement après la naissance.',fa:'شناسه مالیاتی 11 رقمی کودک. پس از تولد خودکار ارسال می‌شود.'}},
+      {id:'kind_adresse',type:'text',req:true,label:{de:'Adresse des Kindes',en:'Child\'s address',ar:'عنوان الطفل',tr:'Çocuğun adresi',uk:'Адреса дитини',fr:'Adresse de l\'enfant',fa:'آدرس کودک'},explain:{de:'Wo wohnt Ihr Kind? Wenn bei Ihnen, geben Sie Ihre Adresse an.',en:'Where does your child live? If with you, enter your address.',ar:'أين يعيش طفلك؟ إذا معك، أدخل عنوانك.',tr:'Çocuğunuz nerede yaşıyor? Sizinleyse adresinizi girin.',uk:'Де проживає дитина? Якщо з вами, вкажіть вашу адресу.',fr:'Où habite votre enfant ? S\'il vit avec vous, indiquez votre adresse.',fa:'کودک کجا زندگی می‌کند؟ اگر با شما، آدرس خود را وارد کنید.'}}
+    ]
+  },
+  {
+    id:'anmeldung',cat:'melde',
+    name:{de:'Anmeldung einer Wohnung',en:'Residence Registration',ar:'تسجيل السكن',tr:'İkamet Kaydı',uk:'Реєстрація проживання',fr:'Déclaration de domicile',fa:'ثبت محل سکونت'},
+    desc:{de:'Anmeldung beim Bürgeramt nach Umzug. Innerhalb von 14 Tagen!',en:'Registration at Citizens\' Office after moving. Within 14 days!',ar:'التسجيل بعد الانتقال. خلال 14 يومًا!',tr:'Taşındıktan sonra kayıt. 14 gün içinde!',uk:'Реєстрація після переїзду. Протягом 14 днів!',fr:'Inscription après déménagement. Dans les 14 jours !',fa:'ثبت نام پس از نقل مکان. ظرف 14 روز!'},
+    docs:{de:['Personalausweis oder Reisepass','Wohnungsgeberbestätigung (vom Vermieter)','Mietvertrag','Anmeldeformular'],en:['ID card or passport','Landlord confirmation','Rental agreement','Registration form'],ar:['بطاقة الهوية أو جواز السفر','تأكيد المالك','عقد الإيجار','نموذج التسجيل'],tr:['Kimlik kartı veya pasaport','Ev sahibi onayı','Kira sözleşmesi','Kayıt formu'],uk:['Посвідчення або паспорт','Підтвердження від орендодавця','Договір оренди','Реєстраційна форма'],fr:['Carte d\'identité ou passeport','Confirmation du propriétaire','Contrat de bail','Formulaire d\'inscription'],fa:['کارت شناسایی یا گذرنامه','تأییدیه صاحبخانه','قرارداد اجاره','فرم ثبت نام']},
+    submit:{de:'Persönlich beim Bürgeramt. Termin vorher online buchen!',en:'In person at Citizens\' Office. Book appointment online first!',ar:'شخصيًا في مكتب المواطنين. احجز موعدًا أولاً!',tr:'Vatandaş Ofisinde şahsen. Önce randevu alın!',uk:'Особисто у бюро громадян. Запишіться онлайн!',fr:'En personne au bureau des citoyens. Réservez en ligne !',fa:'حضوری در اداره شهروندان. ابتدا وقت رزرو کنید!'},
+    fields:[
+      {id:'name',type:'text',req:true,label:{de:'Familienname',en:'Last name',ar:'اسم العائلة',tr:'Soyadı',uk:'Прізвище',fr:'Nom de famille',fa:'نام خانوادگی'},explain:{de:'Ihr Nachname wie im Ausweis.',en:'Your last name as on your ID.',ar:'اسم عائلتك كما في الهوية.',tr:'Kimliğinizdeki soyadınız.',uk:'Ваше прізвище.',fr:'Votre nom de famille.',fa:'نام خانوادگی شما.'}},
+      {id:'vorname',type:'text',req:true,label:{de:'Vorname',en:'First name',ar:'الاسم الأول',tr:'Adı',uk:'Ім\'я',fr:'Prénom',fa:'نام'},explain:{de:'Ihr Vorname wie im Ausweis.',en:'Your first name as on your ID.',ar:'اسمك الأول.',tr:'Kimliğinizdeki adınız.',uk:'Ваше ім\'я.',fr:'Votre prénom.',fa:'نام شما.'}},
+      {id:'geb',type:'date',req:true,label:{de:'Geburtsdatum',en:'Date of birth',ar:'تاريخ الميلاد',tr:'Doğum tarihi',uk:'Дата народження',fr:'Date de naissance',fa:'تاریخ تولد'},explain:{de:'Ihr Geburtsdatum.',en:'Your date of birth.',ar:'تاريخ ميلادك.',tr:'Doğum tarihiniz.',uk:'Ваша дата народження.',fr:'Votre date de naissance.',fa:'تاریخ تولد شما.'}},
+      {id:'neue_adr',type:'text',req:true,label:{de:'Neue Adresse (Straße, Nr., PLZ, Ort)',en:'New address (street, number, postal code, city)',ar:'العنوان الجديد',tr:'Yeni adres',uk:'Нова адреса',fr:'Nouvelle adresse',fa:'آدرس جدید'},explain:{de:'Die vollständige Adresse Ihrer neuen Wohnung.',en:'Full address of your new residence.',ar:'العنوان الكامل لمسكنك الجديد.',tr:'Yeni evinizin tam adresi.',uk:'Повна адреса нового житла.',fr:'Adresse complète du nouveau logement.',fa:'آدرس کامل محل سکونت جدید.'}},
+      {id:'einzug',type:'date',req:true,label:{de:'Einzugsdatum',en:'Move-in date',ar:'تاريخ الانتقال',tr:'Taşınma tarihi',uk:'Дата заселення',fr:'Date d\'emménagement',fa:'تاریخ اسباب‌کشی'},explain:{de:'Wann sind Sie eingezogen?',en:'When did you move in?',ar:'متى انتقلت؟',tr:'Ne zaman taşındınız?',uk:'Коли ви переїхали?',fr:'Quand avez-vous emménagé ?',fa:'چه زمانی نقل مکان کردید؟'}}
+    ]
+  }
+];
+
+var glossary = [
+  {term:'Steuer-ID',ex:{de:'Eine persönliche 11-stellige Nummer vom Finanzamt. Sie haben sie per Post bekommen. Sie ändert sich nie.',en:'A personal 11-digit number from the tax office. You received it by mail. It never changes.',ar:'رقم شخصي من 11 رقمًا من مكتب الضرائب. لا يتغير أبدًا.',tr:'Vergi dairesinden 11 haneli kişisel numara. Asla değişmez.',uk:'Особистий 11-значний номер від податкової. Ніколи не змінюється.',fr:'Numéro personnel à 11 chiffres du bureau des impôts. Ne change jamais.',fa:'شماره شخصی 11 رقمی از اداره مالیات. هرگز تغییر نمی‌کند.'}},
+  {term:'Bedarfsgemeinschaft',ex:{de:'Menschen, die zusammen wohnen und gemeinsam wirtschaften (z.B. Ehepartner). Einkommen wird zusammen berechnet.',en:'People who live together and share finances (e.g. spouses). Income is calculated together.',ar:'أشخاص يعيشون معًا ويتقاسمون المالية. يُحسب الدخل معًا.',tr:'Birlikte yaşayan ve mali durumlarını paylaşan kişiler. Gelir birlikte hesaplanır.',uk:'Люди, які живуть разом і ведуть спільне господарство. Доходи розраховуються разом.',fr:'Personnes vivant ensemble et partageant les finances. Revenus calculés ensemble.',fa:'افرادی که با هم زندگی و هزینه‌ها را تقسیم می‌کنند.'}},
+  {term:'Meldebescheinigung',ex:{de:'Dokument vom Bürgeramt, das bestätigt wo Sie wohnen. Bekommen Sie nach der Anmeldung.',en:'Document from Citizens\' Office confirming where you live. You get it after registration.',ar:'وثيقة تؤكد مكان إقامتك. تحصل عليها بعد التسجيل.',tr:'Nerede yaşadığınızı onaylayan belge. Kayıttan sonra alırsınız.',uk:'Документ, що підтверджує місце проживання. Отримуєте після реєстрації.',fr:'Document confirmant votre lieu de résidence. Obtenu après inscription.',fa:'سندی که محل سکونت شما را تأیید می‌کند. پس از ثبت نام دریافت می‌کنید.'}},
+  {term:'Aufenthaltstitel',ex:{de:'Offizielle Erlaubnis, in Deutschland zu leben. Verschiedene Arten: befristet, unbefristet, Blaue Karte EU.',en:'Official permission to live in Germany. Types: temporary, permanent, EU Blue Card.',ar:'إذن رسمي للعيش في ألمانيا. أنواع: مؤقت، دائم، البطاقة الزرقاء.',tr:'Almanya\'da yaşama izni. Türleri: geçici, kalıcı, AB Mavi Kartı.',uk:'Дозвіл на проживання в Німеччині. Типи: тимчасовий, постійний, Блакитна карта.',fr:'Autorisation de vivre en Allemagne. Types: temporaire, permanent, Carte bleue.',fa:'مجوز رسمی زندگی در آلمان. انواع: موقت، دائمی، کارت آبی.'}},
+  {term:'Wohnungsgeberbestätigung',ex:{de:'Dokument von Ihrem Vermieter, dass Sie eingezogen sind. Brauchen Sie für die Anmeldung.',en:'Document from landlord confirming you moved in. Needed for registration.',ar:'وثيقة من المالك تؤكد انتقالك. مطلوبة للتسجيل.',tr:'Ev sahibinden taşındığınızı onaylayan belge. Kayıt için gerekli.',uk:'Документ від орендодавця про заселення. Потрібний для реєстрації.',fr:'Document du propriétaire confirmant l\'emménagement. Nécessaire pour l\'inscription.',fa:'سند صاحبخانه مبنی بر نقل مکان شما. برای ثبت نام لازم است.'}},
+  {term:'IBAN',ex:{de:'Ihre internationale Bankkontonummer. Auf Ihrer Bankkarte. Beginnt mit DE, 22 Zeichen.',en:'Your international bank account number. On your bank card. Starts with DE, 22 characters.',ar:'رقم حسابك البنكي الدولي. على بطاقتك البنكية. يبدأ بـ DE.',tr:'Uluslararası banka hesap numaranız. Banka kartınızda. DE ile başlar.',uk:'Міжнародний номер рахунку. На банківській картці. Починається з DE.',fr:'Votre IBAN. Sur votre carte bancaire. Commence par DE, 22 caractères.',fa:'شماره حساب بین‌المللی. روی کارت بانکی. با DE شروع می‌شود.'}},
+  {term:'Kindergeld',ex:{de:'Geld vom Staat für jedes Kind: 250€ pro Monat. Jeder mit Kindern in Deutschland kann es beantragen.',en:'Government money for each child: €250/month. Anyone with children in Germany can apply.',ar:'أموال من الدولة لكل طفل: 250€ شهريًا. يمكن لأي شخص لديه أطفال التقدم.',tr:'Her çocuk için devletten para: aylık 250€. Çocuğu olan herkes başvurabilir.',uk:'Гроші від держави: 250€ на дитину на місяць. Кожен з дітьми може подати заяву.',fr:'Argent de l\'État: 250€ par enfant par mois. Tout parent peut en faire la demande.',fa:'پول دولتی برای هر کودک: ماهانه 250 یورو. هر والدینی می‌تواند درخواست دهد.'}},
+  {term:'Bürgergeld',ex:{de:'Finanzielle Hilfe für Arbeitslose oder Geringverdiener. Früher "Hartz IV". Beim Jobcenter beantragen.',en:'Financial help for unemployed or low earners. Formerly "Hartz IV". Apply at Jobcenter.',ar:'مساعدة مالية للعاطلين. كان يُسمى "هارتس 4". يُطلب من مركز العمل.',tr:'İşsizler için mali yardım. Eskiden "Hartz IV". İş Merkezinde başvurulur.',uk:'Допомога для безробітних. Раніше "Hartz IV". Подається у центр зайнятості.',fr:'Aide financière pour les chômeurs. Anciennement "Hartz IV". Au Jobcenter.',fa:'کمک مالی برای بیکاران. قبلاً "هارتس 4". در مرکز کاریابی درخواست دهید.'}},
+  {term:'Familienkasse',ex:{de:'Die Behörde, die Kindergeld auszahlt. Gehört zur Bundesagentur für Arbeit.',en:'The authority that pays child benefit. Part of Federal Employment Agency.',ar:'الهيئة التي تدفع إعانة الأطفال.',tr:'Çocuk parası ödeyen kurum.',uk:'Орган, що виплачує дитячу допомогу.',fr:'L\'autorité qui verse les allocations familiales.',fa:'سازمانی که کمک هزینه کودک را پرداخت می‌کند.'}},
+  {term:'Bürgeramt',ex:{de:'Das Amt in Ihrer Stadt für Anmeldung, Ausweis und andere Verwaltungssachen.',en:'The office in your city for registration, ID, and other administrative tasks.',ar:'المكتب في مدينتك للتسجيل والهوية والأمور الإدارية.',tr:'Şehrinizdeki kayıt ve kimlik işleri ofisi.',uk:'Офіс для реєстрації, посвідчення та інших справ.',fr:'Le bureau pour inscription, pièce d\'identité et démarches administratives.',fa:'اداره شهر برای ثبت نام، کارت شناسایی و امور اداری.'}}
+];
+
+// ========== APP STATE ==========
+var currentView = 'home';
+var currentForm = null;
+var currentStep = 0;
+var answers = {};
+var docChecks = {};
+
+// ========== RENDER ==========
+function t(key){ return (ui[lang]||ui.de)[key]||(ui.de)[key]||key; }
+function tObj(obj){ return obj[lang]||obj.de||''; }
+function catName(c){ return t('cat_'+c); }
+
+function renderLangBar(){
+  var h='';
+  langs.forEach(function(l){
+    h+='<button class="lang-btn'+(l.code===lang?' active':'')+'" onclick="setLang(\''+l.code+'\')">'+l.name+'</button>';
+  });
+  document.getElementById('langBar').innerHTML=h;
+}
+
+function setLang(code){
+  lang=code;
+  var l=langs.find(function(x){return x.code===code});
+  dir=l?l.dir:'ltr';
+  document.getElementById('app').setAttribute('dir',dir);
+  renderLangBar();
+  if(currentView==='home') showHome();
+  else if(currentView==='forms') showForms();
+  else if(currentView==='glossary') showGlossary();
+  else if(currentView==='wizard') showWizard();
+}
+
+function showHome(){
+  currentView='home';
+  var h='<div class="hero"><h2>'+t('tagline')+'</h2><p>'+t('desc')+'</p></div>';
+  h+='<div class="actions"><button class="btn btn-blue btn-big" onclick="showForms()">'+t('selectForm')+'</button>';
+  h+='<button class="btn btn-gray btn-big" onclick="showGlossary()">'+t('glossary')+'</button></div>';
+  h+='<div class="steps">';
+  h+='<div class="step-card"><div class="step-num">1</div><h3>'+t('step1')+'</h3></div>';
+  h+='<div class="step-card"><div class="step-num">2</div><h3>'+t('step2')+'</h3></div>';
+  h+='<div class="step-card"><div class="step-num">3</div><h3>'+t('step3')+'</h3></div>';
+  h+='</div>';
+  document.getElementById('main').innerHTML=h;
+  document.getElementById('footer').innerHTML='<p>FormFriend &copy; 2026 - '+t('privacy')+'</p>';
+}
+
+function showForms(){
+  currentView='forms';
+  var h='<button class="back-btn" onclick="showHome()">&larr; '+t('home')+'</button>';
+  h+='<h2 style="margin-bottom:1.5rem;color:#1e293b">'+t('selectForm')+'</h2>';
+  forms.forEach(function(f,i){
+    h+='<div class="card" onclick="startForm('+i+')">';
+    h+='<span class="tag">'+catName(f.cat)+'</span>';
+    h+='<h3>'+tObj(f.name)+'</h3>';
+    h+='<p>'+tObj(f.desc)+'</p></div>';
+  });
+  document.getElementById('main').innerHTML=h;
+}
+
+function startForm(idx){
+  currentForm=forms[idx];
+  currentStep=0;
+  answers={};
+  docChecks={};
+  showWizard();
+}
+
+function showWizard(){
+  currentView='wizard';
+  var f=currentForm;
+  var total=f.fields.length+2;
+  var isDoc=currentStep===f.fields.length;
+  var isSub=currentStep===f.fields.length+1;
+  var prog=((currentStep+1)/total)*100;
+  var h='<button class="back-btn" onclick="showForms()">&larr; '+t('forms')+'</button>';
+  h+='<div class="wizard"><div class="wiz-head"><h2>'+tObj(f.name)+'</h2>';
+  h+='<div class="progress-row"><span>'+t('step')+' '+(currentStep+1)+' '+t('of')+' '+total+'</span>';
+  h+='<div class="progress-bar"><div class="progress-fill" style="width:'+prog+'%"></div></div></div></div>';
+  h+='<div class="wiz-body">';
+
+  if(!isDoc && !isSub){
+    var fd=f.fields[currentStep];
+    h+='<label class="field-label">'+tObj(fd.label)+'</label>';
+    h+='<div class="field-explain">'+tObj(fd.explain)+'</div>';
+    if(fd.type==='select'){
+      h+='<select class="field-select" id="fieldInput" onchange="answers[\''+fd.id+'\']=this.value">';
+      h+='<option value="">--</option>';
+      fd.opts.forEach(function(o){
+        h+='<option value="'+o.v+'"'+(answers[fd.id]===o.v?' selected':'')+'>'+tObj(o.l)+'</option>';
+      });
+      h+='</select>';
+    } else {
+      h+='<input class="field-input" id="fieldInput" type="'+(fd.type==='date'?'date':'text')+'" value="'+(answers[fd.id]||'')+'" oninput="answers[\''+fd.id+'\']=this.value">';
+    }
+    h+='<div class="field-err" id="fieldErr"></div>';
+  }
+
+  if(isDoc){
+    h+='<h3 style="margin-bottom:.5rem">'+t('docs')+'</h3>';
+    h+='<p style="color:#64748b;margin-bottom:1rem">'+t('docsQ')+'</p>';
+    var docs=f.docs[lang]||f.docs.de;
+    docs.forEach(function(d,i){
+      h+='<div class="doc-item"><input type="checkbox" '+(docChecks[i]?'checked':'')+' onchange="docChecks['+i+']=this.checked"><span>'+d+'</span></div>';
+    });
+  }
+
+  if(isSub){
+    h+='<div class="sub-info"><h3>'+t('where')+'</h3><p>'+tObj(f.submit)+'</p></div>';
+    h+='<div style="margin-top:1.5rem"><h3 style="margin-bottom:.75rem">'+t('summary')+'</h3>';
+    f.fields.forEach(function(fd){
+      h+='<div class="summary-row"><strong>'+tObj(fd.label)+':</strong> '+(answers[fd.id]||'-')+'</div>';
+    });
+    h+='</div>';
+  }
+
+  h+='</div><div class="wiz-foot">';
+  h+='<button class="btn btn-gray" onclick="wizPrev()"'+(currentStep===0?' disabled':'')+'>'+t('back')+'</button>';
+  h+='<button class="btn btn-blue" onclick="wizNext()">'+(isSub?t('submit'):t('next'))+'</button>';
+  h+='</div></div>';
+  document.getElementById('main').innerHTML=h;
+  var inp=document.getElementById('fieldInput');
+  if(inp&&inp.type!=='date') inp.focus();
+}
+
+function wizNext(){
+  var f=currentForm;
+  var total=f.fields.length+2;
+  var isDoc=currentStep===f.fields.length;
+  var isSub=currentStep===f.fields.length+1;
+
+  if(!isDoc&&!isSub){
+    var fd=f.fields[currentStep];
+    if(fd.req&&(!answers[fd.id]||answers[fd.id].trim()==='')){
+      document.getElementById('fieldErr').textContent=t('required');
+      return;
+    }
+  }
+  if(isSub){showComplete();return;}
+  currentStep++;
+  showWizard();
+}
+
+function wizPrev(){
+  if(currentStep>0){currentStep--;showWizard();}
+}
+
+function showComplete(){
+  currentView='complete';
+  var f=currentForm;
+  var h='<button class="back-btn" onclick="showForms()">&larr; '+t('forms')+'</button>';
+  h+='<div class="wizard"><div class="completion">';
+  h+='<h2>'+t('done')+'</h2><p>'+t('ready')+'</p>';
+  h+='<div style="margin-bottom:1.5rem;text-align:left">';
+  h+='<h3 style="margin-bottom:.75rem">'+t('summary')+'</h3>';
+  f.fields.forEach(function(fd){
+    h+='<div class="summary-row"><strong>'+tObj(fd.label)+':</strong> '+(answers[fd.id]||'-')+'</div>';
+  });
+  h+='</div>';
+  h+='<button class="btn btn-green btn-big" onclick="downloadForm()">'+t('download')+'</button>';
+  h+='</div></div>';
+  document.getElementById('main').innerHTML=h;
+}
+
+function downloadForm(){
+  var f=currentForm;
+  var lines=[tObj(f.name),'========================================',''];
+  f.fields.forEach(function(fd){
+    lines.push(tObj(fd.label)+': '+(answers[fd.id]||'-'));
+  });
+  lines.push('','========================================');
+  lines.push('FormFriend - '+new Date().toLocaleDateString());
+  var blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=f.id+'_ausgefuellt.txt';a.click();
+  URL.revokeObjectURL(url);
+}
+
+function showGlossary(){
+  currentView='glossary';
+  var h='<button class="back-btn" onclick="showHome()">&larr; '+t('home')+'</button>';
+  h+='<h2 style="margin-bottom:1.5rem;color:#1e293b">'+t('glossary')+'</h2>';
+  glossary.forEach(function(g){
+    h+='<div class="gloss-card"><h3>'+g.term+'</h3><p>'+tObj(g.ex)+'</p></div>';
+  });
+  document.getElementById('main').innerHTML=h;
+}
+
+// ========== INIT ==========
+renderLangBar();
+showHome();
+</script>
+</body>
+</html>
