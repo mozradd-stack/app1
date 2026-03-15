@@ -2,7 +2,13 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FormFriend">
+<link rel="apple-touch-icon" href="/icon.svg">
 <title>FormFriend - Ihr Helfer für deutsche Formulare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -122,16 +128,62 @@ footer{background:linear-gradient(135deg,rgba(79,70,229,.95),rgba(124,58,237,.95
 .scan-preview{width:100%;max-width:500px;margin:1rem auto;border-radius:16px;display:block}
 
 @media(max-width:640px){header{flex-direction:column;gap:.75rem}.hero h2{font-size:1.5rem}.actions{flex-direction:column;align-items:center}.steps{flex-direction:column;align-items:center}.step-card{max-width:100%}.lang-bar{justify-content:center}.wiz-body{padding:1.25rem 1rem}}
+
+/* === PWA / Handy App === */
+html{-webkit-tap-highlight-color:transparent}
+body{overscroll-behavior-y:contain}
+header{padding-top:max(1rem,env(safe-area-inset-top,0px));padding-left:max(1.5rem,env(safe-area-inset-left,0px));padding-right:max(1.5rem,env(safe-area-inset-right,0px))}
+.app{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid rgba(79,70,229,.12);display:flex;align-items:flex-start;z-index:500;box-shadow:0 -2px 20px rgba(79,70,229,.09);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;border:none;background:none;cursor:pointer;color:#94a3b8;font-family:inherit;font-size:.6rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:color .2s;-webkit-tap-highlight-color:transparent;padding:.6rem .1rem;min-height:58px}
+.nav-item.active{color:#4f46e5}
+.nav-item:active{opacity:.65}
+.nav-icon{font-size:1.45rem;line-height:1;display:block;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.nav-item.active .nav-icon{transform:scale(1.18)}
+.nav-label{display:block}
+.nav-center .nav-icon{width:50px;height:50px;background:linear-gradient(135deg,#ea580c,#dc2626);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 4px 18px rgba(234,88,12,.45);margin-top:-12px;border:3px solid #fff;color:#fff}
+.nav-center.active .nav-icon,.nav-center:hover .nav-icon{background:linear-gradient(135deg,#c2410c,#b91c1c)}
+
+/* install banner */
+.install-bar{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:none;align-items:center;gap:.75rem;padding:.65rem 1rem;font-size:.85rem;font-weight:500;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.1)}
+.install-bar button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.3rem .85rem;border-radius:999px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.install-bar .ib-close{background:none;border:none;font-size:1.1rem;margin-left:auto;padding:0;opacity:.7}
+
+@media(min-width:641px){.bottom-nav{display:none!important}.app{padding-bottom:0!important}.install-bar{display:none!important}}
 </style>
 </head>
 <body>
 <div class="app" id="app">
+  <div class="install-bar" id="installBar" onclick="doInstall()">
+    <span>📲 Als App installieren</span>
+    <button onclick="event.stopPropagation();doInstall()">Installieren</button>
+    <button class="ib-close" onclick="event.stopPropagation();document.getElementById('installBar').style.display='none'">✕</button>
+  </div>
   <header>
     <h1 onclick="showHome()">FormFriend</h1>
     <div class="lang-bar" id="langBar"></div>
   </header>
   <main id="main"></main>
   <footer id="footer"></footer>
+  <nav class="bottom-nav">
+    <button class="nav-item" id="nav-home" onclick="showHome()">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label" id="navlbl-home">Start</span>
+    </button>
+    <button class="nav-item" id="nav-forms" onclick="showForms()">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label" id="navlbl-forms">Formulare</span>
+    </button>
+    <button class="nav-item nav-center" id="nav-scan" onclick="if(typeof scanStream!=='undefined'&&scanStream)stopCamera();showScan()">
+      <span class="nav-icon">📷</span>
+      <span class="nav-label" id="navlbl-scan">Scan</span>
+    </button>
+    <button class="nav-item" id="nav-glossary" onclick="showGlossary()">
+      <span class="nav-icon">📖</span>
+      <span class="nav-label" id="navlbl-glossary">Glossar</span>
+    </button>
+  </nav>
 </div>
 
 <script>
@@ -287,6 +339,29 @@ var currentStep = 0;
 var answers = {};
 var docChecks = {};
 
+// ========== BOTTOM NAV ==========
+var navUI = {
+  de:{home:'Start',forms:'Formulare',scan:'Scan',glossary:'Glossar'},
+  en:{home:'Home',forms:'Forms',scan:'Scan',glossary:'Glossary'},
+  ar:{home:'رئيسية',forms:'نماذج',scan:'مسح',glossary:'مصطلحات'},
+  tr:{home:'Ana',forms:'Formlar',scan:'Tara',glossary:'Sözlük'},
+  uk:{home:'Старт',forms:'Форми',scan:'Скан',glossary:'Глосарій'},
+  fr:{home:'Accueil',forms:'Formulaires',scan:'Scan',glossary:'Glossaire'},
+  fa:{home:'خانه',forms:'فرم‌ها',scan:'اسکن',glossary:'واژه‌نامه'}
+};
+
+function updateNav(){
+  var map={home:'nav-home',forms:'nav-forms',glossary:'nav-glossary',scan:'nav-scan',wizard:'nav-forms',complete:'nav-forms'};
+  var active=map[currentView]||'nav-home';
+  document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active',b.id===active)});
+  var n=navUI[lang]||navUI.de;
+  var el;
+  el=document.getElementById('navlbl-home');if(el)el.textContent=n.home;
+  el=document.getElementById('navlbl-forms');if(el)el.textContent=n.forms;
+  el=document.getElementById('navlbl-scan');if(el)el.textContent=n.scan;
+  el=document.getElementById('navlbl-glossary');if(el)el.textContent=n.glossary;
+}
+
 // ========== RENDER ==========
 function t(key){ return (ui[lang]||ui.de)[key]||(ui.de)[key]||key; }
 function tObj(obj){ return obj[lang]||obj.de||''; }
@@ -326,6 +401,7 @@ function showHome(){
   h+='</div>';
   document.getElementById('main').innerHTML=h;
   document.getElementById('footer').innerHTML='<p>FormFriend &copy; 2026 - '+t('privacy')+'</p>';
+  updateNav();
 }
 
 function showForms(){
@@ -339,6 +415,7 @@ function showForms(){
     h+='<p>'+tObj(f.desc)+'</p></div>';
   });
   document.getElementById('main').innerHTML=h;
+  updateNav();
 }
 
 function startForm(idx){
@@ -404,6 +481,7 @@ function showWizard(){
   document.getElementById('main').innerHTML=h;
   var inp=document.getElementById('fieldInput');
   if(inp&&inp.type!=='date') inp.focus();
+  updateNav();
 }
 
 function wizNext(){
@@ -443,6 +521,7 @@ function showComplete(){
   h+='<button class="btn btn-green btn-big" onclick="downloadForm()">'+t('download')+'</button>';
   h+='</div></div>';
   document.getElementById('main').innerHTML=h;
+  updateNav();
 }
 
 function downloadForm(){
@@ -468,6 +547,7 @@ function showGlossary(){
     h+='<div class="gloss-card"><h3>'+g.term+'</h3><p>'+tObj(g.ex)+'</p></div>';
   });
   document.getElementById('main').innerHTML=h;
+  updateNav();
 }
 
 // ========== SCAN FUNCTIONS ==========
@@ -493,6 +573,7 @@ function showScan(){
   h+='<div id="scanResult"></div>';
   document.getElementById('main').innerHTML=h;
   startCamera();
+  updateNav();
 }
 
 function startCamera(){
@@ -630,6 +711,36 @@ function showLetterResult(idx){
 // ========== INIT ==========
 renderLangBar();
 showHome();
+updateNav();
+
+// ========== PWA: SERVICE WORKER ==========
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+
+// ========== PWA: INSTALL PROMPT ==========
+var deferredInstall = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredInstall = e;
+  var bar = document.getElementById('installBar');
+  if(bar) bar.style.display = 'flex';
+});
+function doInstall(){
+  if(!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(function(){
+    deferredInstall = null;
+    var bar = document.getElementById('installBar');
+    if(bar) bar.style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', function(){
+  var bar = document.getElementById('installBar');
+  if(bar) bar.style.display = 'none';
+});
 </script>
 </body>
 </html>

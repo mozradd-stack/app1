@@ -1,0 +1,28 @@
+{
+  "name": "FormFriend – Formulare leicht gemacht",
+  "short_name": "FormFriend",
+  "description": "Ihr Helfer für deutsche Behördenformulare",
+  "start_url": "/FormFriend.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#4f46e5",
+  "background_color": "#f0f2f7",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "screenshots": []
+}
