@@ -127,6 +127,10 @@ footer{background:linear-gradient(135deg,rgba(79,70,229,.95),rgba(124,58,237,.95
 .scan-upload:hover{border-color:#7c3aed;background:linear-gradient(135deg,#f5f3ff,#ede9fe);transform:translateY(-1px)}
 .scan-preview{width:100%;max-width:500px;margin:1rem auto;border-radius:16px;display:block}
 
+.de-section{background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:0 12px 12px 0;padding:1.15rem 1.25rem;margin-top:1.5rem;text-align:left}
+.de-section h3{color:#92400e;font-size:.95rem;font-weight:700;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem}
+.de-section .summary-row{border-bottom-color:#fde68a;font-size:.92rem}
+
 @media(max-width:640px){header{flex-direction:column;gap:.75rem}.hero h2{font-size:1.5rem}.actions{flex-direction:column;align-items:center}.steps{flex-direction:column;align-items:center}.step-card{max-width:100%}.lang-bar{justify-content:center}.wiz-body{padding:1.25rem 1rem}}
 
 /* === PWA / Handy App === */
@@ -339,6 +343,16 @@ var currentStep = 0;
 var answers = {};
 var docChecks = {};
 
+// ========== GERMAN TRANSLATION LABELS ==========
+var deLabel = {
+  en:'🇩🇪 German version (for submission)',
+  ar:'🇩🇪 النسخة الألمانية (للتقديم إلى الجهات الرسمية)',
+  tr:'🇩🇪 Almanca versiyon (başvuru için)',
+  uk:'🇩🇪 Німецька версія (для подачі)',
+  fr:'🇩🇪 Version allemande (pour soumission)',
+  fa:'🇩🇪 نسخه آلمانی (برای ارسال به مراجع رسمی)'
+};
+
 // ========== BOTTOM NAV ==========
 var navUI = {
   de:{home:'Start',forms:'Formulare',scan:'Scan',glossary:'Glossar'},
@@ -517,6 +531,14 @@ function showComplete(){
   f.fields.forEach(function(fd){
     h+='<div class="summary-row"><strong>'+tObj(fd.label)+':</strong> '+(answers[fd.id]||'-')+'</div>';
   });
+  if(lang!=='de'){
+    h+='<div class="de-section">';
+    h+='<h3>'+(deLabel[lang]||deLabel.en)+'</h3>';
+    f.fields.forEach(function(fd){
+      h+='<div class="summary-row"><strong>'+(fd.label.de||tObj(fd.label))+':</strong> '+(answers[fd.id]||'-')+'</div>';
+    });
+    h+='</div>';
+  }
   h+='</div>';
   h+='<button class="btn btn-green btn-big" onclick="downloadForm()">'+t('download')+'</button>';
   h+='</div></div>';
@@ -530,6 +552,16 @@ function downloadForm(){
   f.fields.forEach(function(fd){
     lines.push(tObj(fd.label)+': '+(answers[fd.id]||'-'));
   });
+  if(lang!=='de'){
+    lines.push('');
+    lines.push('========================================');
+    lines.push('DEUTSCHE VERSION (ZUM EINREICHEN):');
+    lines.push(f.name.de||tObj(f.name));
+    lines.push('========================================','');
+    f.fields.forEach(function(fd){
+      lines.push((fd.label.de||tObj(fd.label))+': '+(answers[fd.id]||'-'));
+    });
+  }
   lines.push('','========================================');
   lines.push('FormFriend - '+new Date().toLocaleDateString());
   var blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
