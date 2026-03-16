@@ -689,6 +689,231 @@ a:hover { text-decoration: underline; }
   100% { opacity: 1; }
 }
 
+/* ─── Signal Dashboard ─────────────────────────────────────────────────────── */
+.signal-dashboard {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sig-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--bg0);
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.sig-controls-left, .sig-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sig-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sig-toggle button {
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text2);
+  background: var(--bg2);
+  border: none;
+  cursor: pointer;
+}
+
+.sig-toggle button.active {
+  background: var(--yellow);
+  color: #000;
+  font-weight: 700;
+}
+
+.sig-select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text1);
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: var(--radius);
+  outline: none;
+  cursor: pointer;
+}
+
+.sig-select.small { max-width: 140px; }
+.sig-select option { background: var(--bg1); color: var(--text1); }
+
+.sig-tf-group { display: flex; gap: 2px; }
+
+.sig-scan-btn, .sig-run-scan, .sig-refresh-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  background: var(--bg2);
+  cursor: pointer;
+}
+
+.sig-scan-btn.active { border-color: var(--yellow); color: var(--yellow); }
+.sig-run-scan { border-color: var(--green); color: var(--green); }
+.sig-refresh-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+.sig-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Summary row */
+.sig-summary-row {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 8px;
+}
+
+.sig-gauge-card, .sig-categories-card, .sig-table-card {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sig-gauge-card { padding: 12px; }
+
+.sig-counts {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.sig-count { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sig-count-num { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+.sig-count-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); }
+.sig-count.long .sig-count-num { color: var(--green); }
+.sig-count.short .sig-count-num { color: var(--red); }
+.sig-count.neutral .sig-count-num { color: var(--yellow); }
+
+/* Categories */
+.sig-categories-list { padding: 6px 10px; display: flex; flex-direction: column; gap: 6px; }
+
+.sig-cat-bar { display: flex; flex-direction: column; gap: 3px; }
+
+.sig-cat-header { display: flex; align-items: center; gap: 8px; }
+.sig-cat-name { font-size: 11px; font-weight: 600; color: var(--text1); min-width: 110px; }
+.sig-cat-signal { font-size: 11px; font-weight: 700; font-family: var(--font-mono); min-width: 55px; }
+.sig-cat-count { font-size: 10px; color: var(--text3); font-family: var(--font-mono); }
+
+.sig-cat-progress {
+  display: flex;
+  height: 4px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sig-cat-long { background: var(--green); transition: width 0.3s; }
+.sig-cat-short { background: var(--red); transition: width 0.3s; }
+
+/* Signal table */
+.sig-table-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg0);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.sig-search {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text1);
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  outline: none;
+  min-width: 140px;
+}
+
+.sig-search:focus { border-color: var(--blue); }
+
+.sig-table-header {
+  display: grid;
+  grid-template-columns: 30px 1fr 120px 100px 80px;
+  padding: 4px 10px;
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg0);
+  border-bottom: 1px solid var(--border);
+}
+
+.sig-table-body { max-height: 400px; overflow-y: auto; }
+
+.sig-row {
+  display: grid;
+  grid-template-columns: 30px 1fr 120px 100px 80px;
+  padding: 4px 10px;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  align-items: center;
+}
+
+.sig-row:hover { background: var(--bg2); }
+.sig-row-id { font-family: var(--font-mono); color: var(--text3); font-size: 10px; }
+.sig-row-name { color: var(--text1); }
+.sig-row-cat { color: var(--text3); font-size: 10px; }
+.sig-row-signal { font-family: var(--font-mono); font-size: 11px; }
+.sig-row-value { font-family: var(--font-mono); color: var(--text2); font-size: 10px; text-align: right; }
+
+/* Scanner */
+.sig-scanner { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.sig-scanner-table-header {
+  display: grid;
+  grid-template-columns: 140px 100px 120px 120px 1fr;
+  padding: 4px 10px;
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg0);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sig-scanner-body { flex: 1; overflow-y: auto; }
+
+.sig-scanner-row {
+  display: grid;
+  grid-template-columns: 140px 100px 120px 120px 1fr;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.sig-scanner-row:hover { background: var(--bg2); }
+
+.sig-scanner-sym strong { color: var(--text1); font-size: 12px; }
+.sig-scanner-sym small { display: block; color: var(--text3); font-size: 10px; }
+
 /* ─── Responsive tweaks ────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
   .terminal-body { grid-template-columns: 180px 1fr 260px; }

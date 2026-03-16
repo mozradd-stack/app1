@@ -8,6 +8,7 @@ import MarketStats from './components/MarketStats';
 import FearGreed from './components/FearGreed';
 import TopMovers from './components/TopMovers';
 import NewsWidget from './components/NewsWidget';
+import SignalDashboard from './components/SignalDashboard';
 import './App.css';
 
 const COINGECKO = '/api/coingecko';
@@ -178,6 +179,9 @@ function App() {
           {/* Tab Navigation */}
           <div className="tab-nav">
             <button className={`tab-btn ${activeTab === 'chart' ? 'active' : ''}`} onClick={() => setActiveTab('chart')}>Chart</button>
+            <button className={`tab-btn ${activeTab === 'signals' ? 'active' : ''}`} onClick={() => setActiveTab('signals')}>
+              Signals <span style={{ fontSize: 9, background: 'var(--yellow)', color: '#000', borderRadius: 3, padding: '1px 4px', marginLeft: 4, fontWeight: 700 }}>100</span>
+            </button>
             <button className={`tab-btn ${activeTab === 'news' ? 'active' : ''}`} onClick={() => setActiveTab('news')}>News</button>
             <button className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>Market</button>
           </div>
@@ -185,6 +189,12 @@ function App() {
           {/* Main Content */}
           <div className="center-content">
             {activeTab === 'chart' && <Chart symbol={selectedSymbol} />}
+            {activeTab === 'signals' && (
+              <SignalDashboard
+                fearGreedValue={fearGreed ? parseInt(fearGreed.value) : null}
+                onSymbolSelect={handleSymbolSelect}
+              />
+            )}
             {activeTab === 'news' && <NewsWidget news={news} />}
             {activeTab === 'overview' && (
               <div className="overview-tab">

@@ -91,6 +91,48 @@ app.get('/api/binance/*', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+// Forex candle data proxy (using Frankfurter API for daily rates)
+app.get('/api/forex/candles', async (req, res) => {
+  try {
+    const { symbol, interval } = req.query;
+    if (!symbol) return res.status(400).json({ error: 'symbol required' });
+
+    // Parse forex pair (e.g., EURUSD → EUR, USD)
+    const base = symbol.substring(0, 3);
+    const quote = symbol.substring(3, 6);
+    const cacheKey = `forex_${symbol}_${interval}`;
+
+    const data = await cached(cacheKey, 300000, async () => {
+      // Fetch ~500 days of historical data from Frankfurter
+      const endDate = new Date().toISOString().split('T')[0];
+      const startDate = new Date(Date.now() - 600 * 86400000).toISOString().split('T')[0];
+      const url = `https://api.frankfurter.app/${startDate}..${endDate}?from=${base}&to=${quote}`;
+      return proxyGet(url);
+    });
+
+    // Convert daily rates to OHLCV-like format
+    const rates = data.rates || {};
+    const dates = Object.keys(rates).sort();
+    const candles = dates.map((date, i) => {
+      const rate = rates[date][quote];
+      const prevRate = i > 0 ? rates[dates[i - 1]][quote] : rate;
+      // Approximate OHLCV from daily close
+      const volatility = Math.abs(rate - prevRate) * 0.5;
+      return {
+        time: new Date(date).getTime(),
+        open: prevRate,
+        high: Math.max(rate, prevRate) + volatility * 0.3,
+        low: Math.min(rate, prevRate) - volatility * 0.3,
+        close: rate,
+        volume: 1000000 + Math.random() * 500000, // simulated volume
+      };
+    });
+
+    res.json({ candles });
+  } catch (e) {
+    res.status(500).json({ error: e.message, candles: [] });
+  }
+});
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.use(cors());
