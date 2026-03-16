@@ -1,148 +1,212 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import LanguageSelector from './components/LanguageSelector';
-import FormList from './components/FormList';
-import FormWizard from './components/FormWizard';
-import Glossary from './components/Glossary';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Header from './components/Header';
+import Watchlist from './components/Watchlist';
+import Chart from './components/Chart';
+import OrderBook from './components/OrderBook';
+import RecentTrades from './components/RecentTrades';
+import MarketStats from './components/MarketStats';
+import FearGreed from './components/FearGreed';
+import TopMovers from './components/TopMovers';
+import NewsWidget from './components/NewsWidget';
 import './App.css';
 
-const API_BASE = '/api';
+const COINGECKO = '/api/coingecko';
+
+// Map Binance symbol → CoinGecko id
+const SYMBOL_TO_CG = {
+  BTCUSDT: 'bitcoin', ETHUSDT: 'ethereum', BNBUSDT: 'binancecoin',
+  SOLUSDT: 'solana', XRPUSDT: 'ripple', ADAUSDT: 'cardano',
+  DOGEUSDT: 'dogecoin', AVAXUSDT: 'avalanche-2', DOTUSDT: 'polkadot',
+  MATICUSDT: 'matic-network', LINKUSDT: 'chainlink', UNIUSDT: 'uniswap',
+  LTCUSDT: 'litecoin', BCHUSDT: 'bitcoin-cash', ATOMUSDT: 'cosmos',
+  ETCUSDT: 'ethereum-classic', XLMUSDT: 'stellar', ALGOUSDT: 'algorand',
+  VETUSDT: 'vechain', FTMUSDT: 'fantom',
+};
 
 function App() {
-  const [lang, setLang] = useState('de');
-  const [languages, setLanguages] = useState([]);
-  const [ui, setUi] = useState(null);
-  const [view, setView] = useState('home'); // home, forms, wizard, glossary
-  const [forms, setForms] = useState([]);
-  const [selectedForm, setSelectedForm] = useState(null);
-  const [glossary, setGlossary] = useState([]);
-  const [dir, setDir] = useState('ltr');
+  const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
+  const [ticker, setTicker] = useState(null);
+  const [watchlist, setWatchlist] = useState([]);
+  const [globalData, setGlobalData] = useState(null);
+  const [fearGreed, setFearGreed] = useState(null);
+  const [news, setNews] = useState([]);
+  const [topMovers, setTopMovers] = useState({ gainers: [], losers: [] });
+  const [activeTab, setActiveTab] = useState('chart'); // chart | news | portfolio
+  const tickerWsRef = useRef(null);
 
-  const fetchUi = useCallback(async (language) => {
-    const res = await fetch(`${API_BASE}/translations/${language}`);
-    const data = await res.json();
-    setUi(data);
+  // Watchlist + top movers from CoinGecko
+  const fetchWatchlist = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `${COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h`
+      );
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setWatchlist(data);
+        const gainers = [...data]
+          .filter(c => c.price_change_percentage_24h > 0)
+          .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+          .slice(0, 6);
+        const losers = [...data]
+          .filter(c => c.price_change_percentage_24h < 0)
+          .sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h)
+          .slice(0, 6);
+        setTopMovers({ gainers, losers });
+      }
+    } catch (e) { console.error('Watchlist:', e); }
   }, []);
 
+  // Global market stats
+  const fetchGlobal = useCallback(async () => {
+    try {
+      const res = await fetch(`${COINGECKO}/global`);
+      const data = await res.json();
+      if (data?.data) setGlobalData(data.data);
+    } catch (e) { console.error('Global:', e); }
+  }, []);
+
+  // Fear & Greed
+  const fetchFearGreed = useCallback(async () => {
+    try {
+      const res = await fetch('/api/fng');
+      const data = await res.json();
+      if (data?.data?.[0]) setFearGreed(data.data[0]);
+    } catch (e) { console.error('FNG:', e); }
+  }, []);
+
+  // News
+  const fetchNews = useCallback(async () => {
+    try {
+      const res = await fetch('/api/news');
+      const data = await res.json();
+      if (data?.articles) setNews(data.articles);
+    } catch (e) { console.error('News:', e); }
+  }, []);
+
+  useEffect(() => { fetchWatchlist(); const t = setInterval(fetchWatchlist, 30000); return () => clearInterval(t); }, [fetchWatchlist]);
+  useEffect(() => { fetchGlobal(); const t = setInterval(fetchGlobal, 60000); return () => clearInterval(t); }, [fetchGlobal]);
+  useEffect(() => { fetchFearGreed(); const t = setInterval(fetchFearGreed, 3600000); return () => clearInterval(t); }, [fetchFearGreed]);
+  useEffect(() => { fetchNews(); const t = setInterval(fetchNews, 300000); return () => clearInterval(t); }, [fetchNews]);
+
+  // Binance ticker WebSocket
   useEffect(() => {
-    fetch(`${API_BASE}/languages`)
-      .then(r => r.json())
-      .then(setLanguages);
-    fetchUi(lang);
-  }, [lang, fetchUi]);
+    if (tickerWsRef.current) {
+      tickerWsRef.current.close();
+    }
+    const stream = selectedSymbol.toLowerCase();
+    const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${stream}@ticker`);
+    tickerWsRef.current = ws;
 
-  useEffect(() => {
-    const langInfo = languages.find(l => l.code === lang);
-    setDir(langInfo?.dir || 'ltr');
-  }, [lang, languages]);
+    ws.onmessage = (event) => {
+      const d = JSON.parse(event.data);
+      setTicker({
+        symbol: d.s,
+        price: parseFloat(d.c),
+        change: parseFloat(d.P),
+        changeAbs: parseFloat(d.p),
+        high: parseFloat(d.h),
+        low: parseFloat(d.l),
+        volume: parseFloat(d.v),
+        quoteVolume: parseFloat(d.q),
+        openPrice: parseFloat(d.o),
+        trades: parseInt(d.n),
+        bidPrice: parseFloat(d.b),
+        askPrice: parseFloat(d.a),
+      });
+    };
 
-  const loadForms = async () => {
-    const res = await fetch(`${API_BASE}/forms?lang=${lang}`);
-    const data = await res.json();
-    setForms(data);
-    setView('forms');
+    ws.onerror = () => {};
+    return () => { if (ws.readyState <= 1) ws.close(); };
+  }, [selectedSymbol]);
+
+  const handleSymbolSelect = useCallback((symbol) => {
+    setSelectedSymbol(symbol);
+    setTicker(null);
+    setActiveTab('chart');
+  }, []);
+
+  const fmt = (n, decimals = 2) =>
+    n != null ? n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) : '—';
+
+  const fmtPrice = (p) => {
+    if (p == null) return '—';
+    if (p >= 1000) return p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (p >= 1) return p.toFixed(4);
+    return p.toFixed(6);
   };
-
-  const selectForm = async (formId) => {
-    const res = await fetch(`${API_BASE}/forms/${formId}?lang=${lang}`);
-    const data = await res.json();
-    setSelectedForm(data);
-    setView('wizard');
-  };
-
-  const loadGlossary = async () => {
-    const res = await fetch(`${API_BASE}/glossary?lang=${lang}`);
-    const data = await res.json();
-    setGlossary(data);
-    setView('glossary');
-  };
-
-  if (!ui) return <div className="loading">Loading...</div>;
 
   return (
-    <div className="app" dir={dir}>
-      <header className="app-header">
-        <h1 onClick={() => setView('home')} className="app-title">
-          {ui.appName}
-        </h1>
-        <LanguageSelector
-          languages={languages}
-          current={lang}
-          onChange={setLang}
-        />
-      </header>
+    <div className="terminal">
+      <Header ticker={ticker} globalData={globalData} selectedSymbol={selectedSymbol} />
 
-      <main className="app-main">
-        {view === 'home' && (
-          <div className="home">
-            <div className="hero">
-              <h2>{ui.tagline}</h2>
-              <p className="hero-description">
-                {lang === 'de' && 'Wir helfen Ihnen, deutsche Behördenformulare einfach und richtig auszufüllen. Schritt für Schritt, in Ihrer Sprache.'}
-                {lang === 'en' && 'We help you fill out German official forms easily and correctly. Step by step, in your language.'}
-                {lang === 'ar' && 'نساعدك في ملء النماذج الرسمية الألمانية بسهولة وبشكل صحيح. خطوة بخطوة، بلغتك.'}
-                {lang === 'tr' && 'Alman resmi formlarını kolay ve doğru bir şekilde doldurmanıza yardımcı oluyoruz. Adım adım, kendi dilinizde.'}
-                {lang === 'uk' && 'Ми допоможемо вам легко та правильно заповнити німецькі офіційні форми. Крок за кроком, вашою мовою.'}
-                {lang === 'fr' && 'Nous vous aidons à remplir facilement et correctement les formulaires officiels allemands. Étape par étape, dans votre langue.'}
-                {lang === 'fa' && 'ما به شما کمک می‌کنیم فرم‌های رسمی آلمانی را به آسانی و به درستی پر کنید. مرحله به مرحله، به زبان خودتان.'}
-              </p>
+      <div className="terminal-body">
+        {/* Left: Watchlist */}
+        <aside className="panel panel-watchlist">
+          <Watchlist
+            coins={watchlist}
+            selectedSymbol={selectedSymbol}
+            onSelect={handleSymbolSelect}
+          />
+        </aside>
+
+        {/* Center: Chart + Symbol Info */}
+        <main className="panel panel-center">
+          {/* Symbol Info Bar */}
+          <div className="symbol-bar">
+            <div className="symbol-bar-left">
+              <span className="symbol-name">{selectedSymbol}</span>
+              <span className={`symbol-price ${ticker?.change >= 0 ? 'pos' : 'neg'}`}>
+                {ticker ? `$${fmtPrice(ticker.price)}` : '—'}
+              </span>
+              <span className={`symbol-change ${ticker?.change >= 0 ? 'pos' : 'neg'}`}>
+                {ticker ? `${ticker.change >= 0 ? '+' : ''}${fmt(ticker.change)}%` : ''}
+              </span>
+              <span className={`symbol-change-abs ${ticker?.change >= 0 ? 'pos' : 'neg'}`}>
+                {ticker ? `${ticker.changeAbs >= 0 ? '+' : ''}${fmtPrice(ticker.changeAbs)}` : ''}
+              </span>
             </div>
-
-            <div className="home-actions">
-              <button className="btn btn-primary btn-large" onClick={loadForms}>
-                {ui.selectForm}
-              </button>
-              <button className="btn btn-secondary btn-large" onClick={loadGlossary}>
-                {ui.glossary}
-              </button>
-            </div>
-
-            <div className="features">
-              <div className="feature-card">
-                <div className="feature-icon">1</div>
-                <h3>{lang === 'de' ? 'Formular wählen' : lang === 'en' ? 'Choose form' : lang === 'ar' ? 'اختر النموذج' : lang === 'tr' ? 'Form seçin' : lang === 'uk' ? 'Оберіть форму' : lang === 'fr' ? 'Choisir le formulaire' : 'فرم را انتخاب کنید'}</h3>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon">2</div>
-                <h3>{lang === 'de' ? 'Fragen beantworten' : lang === 'en' ? 'Answer questions' : lang === 'ar' ? 'أجب على الأسئلة' : lang === 'tr' ? 'Soruları cevaplayın' : lang === 'uk' ? 'Дайте відповіді' : lang === 'fr' ? 'Répondre aux questions' : 'به سؤالات پاسخ دهید'}</h3>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon">3</div>
-                <h3>{lang === 'de' ? 'Formular herunterladen' : lang === 'en' ? 'Download form' : lang === 'ar' ? 'حمّل النموذج' : lang === 'tr' ? 'Formu indirin' : lang === 'uk' ? 'Завантажте форму' : lang === 'fr' ? 'Télécharger' : 'فرم را دانلود کنید'}</h3>
-              </div>
+            <div className="symbol-bar-stats">
+              <div className="stat"><span className="stat-label">24h High</span><span className="stat-value pos">{ticker ? fmtPrice(ticker.high) : '—'}</span></div>
+              <div className="stat"><span className="stat-label">24h Low</span><span className="stat-value neg">{ticker ? fmtPrice(ticker.low) : '—'}</span></div>
+              <div className="stat"><span className="stat-label">24h Vol</span><span className="stat-value">{ticker ? `${fmt(ticker.quoteVolume / 1e6, 2)}M $` : '—'}</span></div>
+              <div className="stat"><span className="stat-label">Trades</span><span className="stat-value">{ticker ? ticker.trades.toLocaleString() : '—'}</span></div>
+              <div className="stat"><span className="stat-label">Bid</span><span className="stat-value pos">{ticker ? fmtPrice(ticker.bidPrice) : '—'}</span></div>
+              <div className="stat"><span className="stat-label">Ask</span><span className="stat-value neg">{ticker ? fmtPrice(ticker.askPrice) : '—'}</span></div>
             </div>
           </div>
-        )}
 
-        {view === 'forms' && (
-          <FormList
-            forms={forms}
-            ui={ui}
-            onSelect={selectForm}
-            onBack={() => setView('home')}
-          />
-        )}
+          {/* Tab Navigation */}
+          <div className="tab-nav">
+            <button className={`tab-btn ${activeTab === 'chart' ? 'active' : ''}`} onClick={() => setActiveTab('chart')}>Chart</button>
+            <button className={`tab-btn ${activeTab === 'news' ? 'active' : ''}`} onClick={() => setActiveTab('news')}>News</button>
+            <button className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>Market</button>
+          </div>
 
-        {view === 'wizard' && selectedForm && (
-          <FormWizard
-            form={selectedForm}
-            ui={ui}
-            lang={lang}
-            onBack={() => setView('forms')}
-          />
-        )}
+          {/* Main Content */}
+          <div className="center-content">
+            {activeTab === 'chart' && <Chart symbol={selectedSymbol} />}
+            {activeTab === 'news' && <NewsWidget news={news} />}
+            {activeTab === 'overview' && (
+              <div className="overview-tab">
+                <TopMovers topMovers={topMovers} />
+                <MarketStats globalData={globalData} />
+              </div>
+            )}
+          </div>
+        </main>
 
-        {view === 'glossary' && (
-          <Glossary
-            terms={glossary}
-            ui={ui}
-            onBack={() => setView('home')}
-          />
-        )}
-      </main>
+        {/* Right: Order Book + Trades */}
+        <aside className="panel panel-right">
+          <OrderBook symbol={selectedSymbol} />
+          <RecentTrades symbol={selectedSymbol} />
+        </aside>
+      </div>
 
-      <footer className="app-footer">
-        <p>FormFriend &copy; 2026 - {lang === 'de' ? 'Datenschutz ist uns wichtig. Ihre Daten werden nicht gespeichert.' : lang === 'en' ? 'Privacy matters. Your data is not stored.' : lang === 'ar' ? 'خصوصيتك مهمة. بياناتك لا تُخزَّن.' : lang === 'tr' ? 'Gizliliğiniz önemlidir. Verileriniz saklanmaz.' : lang === 'uk' ? 'Конфіденційність важлива. Ваші дані не зберігаються.' : lang === 'fr' ? 'Votre vie privée compte. Vos données ne sont pas stockées.' : 'حریم خصوصی مهم است. داده‌های شما ذخیره نمی‌شوند.'}</p>
-      </footer>
+      {/* Bottom Bar */}
+      <div className="bottom-bar">
+        <MarketStats globalData={globalData} compact />
+        <FearGreed fearGreed={fearGreed} />
+      </div>
     </div>
   );
 }

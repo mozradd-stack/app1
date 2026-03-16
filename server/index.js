@@ -3,12 +3,95 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const https = require('https');
+const http = require('http');
 const formTemplates = require('./data/formTemplates');
 const glossary = require('./data/glossary');
 const translations = require('./data/translations');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// ─── Trading Terminal API Proxy ───────────────────────────────────────────────
+function proxyGet(url) {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith('https') ? https : http;
+    lib.get(url, { headers: { 'User-Agent': 'TradingTerminal/1.0', 'Accept': 'application/json' } }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); }
+        catch(e) { reject(new Error('JSON parse error')); }
+      });
+    }).on('error', reject);
+  });
+}
+
+// Simple in-memory cache
+const cache = new Map();
+function cached(key, ttlMs, fn) {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.ts < ttlMs) return Promise.resolve(entry.data);
+  return fn().then(data => { cache.set(key, { data, ts: Date.now() }); return data; });
+}
+
+// CoinGecko proxy
+app.get('/api/coingecko/*', async (req, res) => {
+  try {
+    const path = req.path.replace('/api/coingecko', '');
+    const query = Object.keys(req.query).length ? '?' + new URLSearchParams(req.query).toString() : '';
+    const url = `https://api.coingecko.com/api/v3${path}${query}`;
+    const cacheKey = url;
+    const data = await cached(cacheKey, 30000, () => proxyGet(url));
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Fear & Greed Index proxy
+app.get('/api/fng', async (req, res) => {
+  try {
+    const data = await cached('fng', 3600000, () => proxyGet('https://api.alternative.me/fng/?limit=10'));
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Crypto news proxy (using CryptoPanic public API)
+app.get('/api/news', async (req, res) => {
+  try {
+    const data = await cached('news', 300000, () =>
+      proxyGet('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest')
+    );
+    const articles = (data.Data || []).slice(0, 20).map(item => ({
+      title: item.title,
+      url: item.url,
+      source: item.source_info?.name || item.source,
+      published: item.published_on,
+      imageUrl: item.imageurl,
+      body: item.body?.substring(0, 200),
+    }));
+    res.json({ articles });
+  } catch (e) {
+    res.status(500).json({ error: e.message, articles: [] });
+  }
+});
+
+// Binance proxy (optional fallback for CORS issues)
+app.get('/api/binance/*', async (req, res) => {
+  try {
+    const binancePath = req.path.replace('/api/binance', '');
+    const query = Object.keys(req.query).length ? '?' + new URLSearchParams(req.query).toString() : '';
+    const url = `https://api.binance.com/api/v3${binancePath}${query}`;
+    const data = await proxyGet(url);
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+// ─────────────────────────────────────────────────────────────────────────────
 
 app.use(cors());
 app.use(express.json());
