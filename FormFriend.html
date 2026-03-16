@@ -17,6 +17,11 @@
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── Charakter-Animationen ── */
+@keyframes char-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes char-blink{0%,88%,100%{transform:scaleY(1)}93%{transform:scaleY(0.06)}97%{transform:scaleY(1)}}
+@keyframes char-wave{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-30deg)}60%{transform:rotate(14deg)}80%{transform:rotate(-8deg)}}
+
 /* ── Variablen ── */
 :root{
   --blue:#1e3a5f;
@@ -152,7 +157,23 @@ footer{background:var(--blue);color:rgba(255,255,255,.65);text-align:center;padd
 .scan-upload:hover{border-color:var(--blue-mid);background:var(--blue-light)}
 .scan-preview{width:100%;max-width:500px;margin:1rem auto;border-radius:6px;display:block}
 
-@media(max-width:640px){header{flex-direction:column;gap:.65rem}.hero h2{font-size:1.35rem}.actions{flex-direction:column;align-items:center}.steps{flex-direction:column;align-items:center}.step-card{max-width:100%}.lang-bar{justify-content:center}.wiz-body{padding:1.1rem .9rem}}
+/* ── Charakter + Sprechblase ── */
+.char-wrap{display:flex;align-items:center;justify-content:center;gap:2rem;margin-bottom:2rem;animation:slideUp .5s ease-out}
+.char-fig{animation:char-float 3.2s ease-in-out infinite;flex-shrink:0;filter:drop-shadow(0 8px 16px rgba(30,58,95,.18))}
+.char-eye-g{transform-box:fill-box;transform-origin:center;animation:char-blink 5s ease-in-out infinite}
+.char-eye-g.r{animation-delay:.15s}
+.char-arm-wave{transform-origin:96px 72px;animation:char-wave 2.4s ease-in-out infinite}
+.char-bubble{background:var(--surface);border:2px solid var(--border);border-radius:16px 16px 16px 4px;padding:1.2rem 1.5rem;max-width:270px;box-shadow:0 3px 14px rgba(0,0,0,.09);position:relative}
+.char-bubble::before{content:'';position:absolute;left:-13px;top:22px;border:7px solid transparent;border-right-color:var(--border)}
+.char-bubble::after{content:'';position:absolute;left:-10px;top:23px;border:6px solid transparent;border-right-color:var(--surface)}
+.char-bubble h3{color:var(--blue);font-size:1.05rem;font-weight:700;margin-bottom:.4rem}
+.char-bubble p{color:var(--muted);font-size:.86rem;line-height:1.55}
+[dir=rtl] .char-wrap{flex-direction:row-reverse}
+[dir=rtl] .char-bubble{border-radius:16px 16px 4px 16px}
+[dir=rtl] .char-bubble::before{left:auto;right:-13px;border-right-color:transparent;border-left-color:var(--border)}
+[dir=rtl] .char-bubble::after{left:auto;right:-10px;border-right-color:transparent;border-left-color:var(--surface)}
+
+@media(max-width:640px){header{flex-direction:column;gap:.65rem}.hero h2{font-size:1.35rem}.actions{flex-direction:column;align-items:center}.steps{flex-direction:column;align-items:center}.step-card{max-width:100%}.lang-bar{justify-content:center}.wiz-body{padding:1.1rem .9rem}.char-wrap{flex-direction:column;gap:1rem}.char-fig{width:90px;height:120px}.char-bubble{border-radius:16px 16px 16px 16px;max-width:100%}.char-bubble::before,.char-bubble::after{display:none}}
 
 /* ── PWA / Safe Area ── */
 html{-webkit-tap-highlight-color:transparent}
@@ -423,16 +444,82 @@ function setLang(code){
   else if(currentView==='scan') showScan();
 }
 
+function charHTML(){
+  var svg=
+  '<svg class="char-fig" viewBox="0 0 120 165" width="115" height="158" xmlns="http://www.w3.org/2000/svg">'+
+  // Schatten
+  '<ellipse cx="60" cy="162" rx="25" ry="5" fill="rgba(30,58,95,.13)"/>'+
+  // Beine
+  '<rect x="36" y="115" width="16" height="38" rx="6" fill="#162d4f"/>'+
+  '<rect x="58" y="115" width="16" height="38" rx="6" fill="#162d4f"/>'+
+  // Schuhe
+  '<ellipse cx="44" cy="151" rx="12" ry="5.5" fill="#111827"/>'+
+  '<ellipse cx="66" cy="151" rx="12" ry="5.5" fill="#111827"/>'+
+  // Körper / Jacke
+  '<path d="M20 72 Q20 122 26 130 L94 130 Q100 122 100 72 Z" fill="#1e3a5f"/>'+
+  // Hemd-Kragen / Revers
+  '<polygon points="50,72 60,90 70,72" fill="white"/>'+
+  '<polygon points="44,72 53,78 60,90 50,72" fill="#f0f0f0"/>'+
+  '<polygon points="76,72 67,78 60,90 70,72" fill="#f0f0f0"/>'+
+  // Krawatte
+  '<polygon points="57,75 63,75 65,104 60,110 55,104" fill="#c0392b"/>'+
+  // Linker Arm (ruhig)
+  '<path d="M20 80 Q5 93 10 112" stroke="#1e3a5f" stroke-width="14" fill="none" stroke-linecap="round"/>'+
+  '<circle cx="11" cy="116" r="8.5" fill="#f0b98a"/>'+
+  // Rechter Arm (winkt) – animiert
+  '<g class="char-arm-wave">'+
+  '<path d="M100 80 Q115 66 116 48" stroke="#1e3a5f" stroke-width="14" fill="none" stroke-linecap="round"/>'+
+  '<circle cx="117" cy="44" r="8.5" fill="#f0b98a"/>'+
+  // Wink-Hand-Details
+  '<line x1="117" y1="35" x2="116" y2="28" stroke="#f0b98a" stroke-width="5" stroke-linecap="round"/>'+
+  '<line x1="122" y1="37" x2="123" y2="30" stroke="#f0b98a" stroke-width="5" stroke-linecap="round"/>'+
+  '<line x1="125" y1="42" x2="128" y2="36" stroke="#f0b98a" stroke-width="5" stroke-linecap="round"/>'+
+  '</g>'+
+  // Hals
+  '<rect x="52" y="60" width="16" height="16" rx="5" fill="#f0b98a"/>'+
+  // Kopf
+  '<circle cx="60" cy="44" r="33" fill="#f0b98a"/>'+
+  // Ohren
+  '<ellipse cx="27" cy="44" rx="5.5" ry="7" fill="#dba070"/>'+
+  '<ellipse cx="93" cy="44" rx="5.5" ry="7" fill="#dba070"/>'+
+  // Haare
+  '<path d="M29 36 Q34 8 60 7 Q86 8 91 36 Q85 12 60 11 Q35 12 29 36Z" fill="#3d2108"/>'+
+  // Linkes Auge (animiert)
+  '<g class="char-eye-g l">'+
+  '<ellipse cx="45" cy="42" rx="7.5" ry="7.5" fill="white"/>'+
+  '<circle cx="47" cy="43" r="4.8" fill="#1a1a2e"/>'+
+  '<circle cx="49" cy="41" r="1.9" fill="white"/>'+
+  '</g>'+
+  // Rechtes Auge (animiert)
+  '<g class="char-eye-g r">'+
+  '<ellipse cx="75" cy="42" rx="7.5" ry="7.5" fill="white"/>'+
+  '<circle cx="73" cy="43" r="4.8" fill="#1a1a2e"/>'+
+  '<circle cx="75" cy="41" r="1.9" fill="white"/>'+
+  '</g>'+
+  // Augenbrauen
+  '<path d="M37 30 Q45 25 53 28" stroke="#3d2108" stroke-width="2.8" fill="none" stroke-linecap="round"/>'+
+  '<path d="M67 28 Q75 25 83 30" stroke="#3d2108" stroke-width="2.8" fill="none" stroke-linecap="round"/>'+
+  // Nase
+  '<ellipse cx="60" cy="50" rx="3" ry="2.2" fill="#dba070"/>'+
+  // Lächeln
+  '<path d="M49 59 Q60 70 71 59" stroke="#b06040" stroke-width="2.8" fill="none" stroke-linecap="round"/>'+
+  '</svg>';
+
+  return '<div class="char-wrap">'+svg+
+    '<div class="char-bubble"><h3>'+t('tagline')+'</h3><p>'+t('desc')+'</p></div>'+
+  '</div>';
+}
+
 function showHome(){
   currentView='home';
-  var h='<div class="hero"><h2>'+t('tagline')+'</h2><p>'+t('desc')+'</p></div>';
+  var h=charHTML();
   h+='<div class="actions"><button class="btn btn-orange btn-big" onclick="showScan()">'+t('scanBtn')+'</button>';
   h+='<button class="btn btn-blue btn-big" onclick="showForms()">'+t('selectForm')+'</button>';
   h+='<button class="btn btn-gray btn-big" onclick="showGlossary()">'+t('glossary')+'</button></div>';
   h+='<div class="steps">';
-  h+='<div class="step-card"><div class="step-num">1</div><h3>'+t('step1')+'</h3></div>';
-  h+='<div class="step-card"><div class="step-num">2</div><h3>'+t('step2')+'</h3></div>';
-  h+='<div class="step-card"><div class="step-num">3</div><h3>'+t('step3')+'</h3></div>';
+  h+='<div class="step-card"><div class="step-num"></div><h3>'+t('step1')+'</h3></div>';
+  h+='<div class="step-card"><div class="step-num"></div><h3>'+t('step2')+'</h3></div>';
+  h+='<div class="step-card"><div class="step-num"></div><h3>'+t('step3')+'</h3></div>';
   h+='</div>';
   document.getElementById('main').innerHTML=h;
   document.getElementById('footer').innerHTML='<p>Formularhilfe &copy; 2026 &nbsp;&mdash;&nbsp; '+t('privacy')+'</p>';
