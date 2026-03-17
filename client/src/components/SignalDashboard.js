@@ -92,8 +92,33 @@ function SignalRow({ signal }) {
   );
 }
 
+// ─── Helper: Forex OHLCV via Frankfurter (direct browser call) ─────────────
+async function fetchForexOHLCV(symbol) {
+  const base = symbol.substring(0, 3);
+  const quote = symbol.substring(3, 6);
+  const endDate = new Date().toISOString().split('T')[0];
+  const startDate = new Date(Date.now() - 600 * 86400000).toISOString().split('T')[0];
+  const res = await fetch(`https://api.frankfurter.app/${startDate}..${endDate}?from=${base}&to=${quote}`);
+  const data = await res.json();
+  const rates = data.rates || {};
+  const dates = Object.keys(rates).sort();
+  return dates.map((date, i) => {
+    const rate = rates[date][quote];
+    const prevRate = i > 0 ? rates[dates[i - 1]][quote] : rate;
+    const v = Math.abs(rate - prevRate) * 0.3;
+    return {
+      time: new Date(date).getTime(),
+      open: prevRate,
+      high: Math.max(rate, prevRate) + v,
+      low: Math.min(rate, prevRate) - v,
+      close: rate,
+      volume: 1000000 + Math.random() * 500000,
+    };
+  });
+}
+
 // ─── Main Dashboard ────────────────────────────────────────────────────────
-export default function SignalDashboard({ fearGreedValue, onSymbolSelect }) {
+export default function SignalDashboard({ fearGreedValue, fearGreedPrev, btcDominance, btcDominancePrev, globalMarketCap, globalMarketCapPrev, onSymbolSelect }) {
   const [assetType, setAssetType] = useState('crypto');
   const [selectedAsset, setSelectedAsset] = useState('BTCUSDT');
   const [timeframe, setTimeframe] = useState('1h');
@@ -105,21 +130,36 @@ export default function SignalDashboard({ fearGreedValue, onSymbolSelect }) {
   const [scanMode, setScanMode] = useState(false);
   const [scanResults, setScanResults] = useState([]);
   const [scanning, setScanning] = useState(false);
+  const [fundingRate, setFundingRate] = useState(null);
+  const [longShortRatio, setLongShortRatio] = useState(null);
+  const [marketCap, setMarketCap] = useState(null);
 
   const assets = assetType === 'crypto' ? CRYPTO_PAIRS : FOREX_PAIRS;
+
+  // Fetch Binance futures sentiment data for crypto
+  useEffect(() => {
+    if (assetType !== 'crypto') return;
+    const futuresSymbol = selectedAsset.replace('USDT', '') + 'USDT';
+    // Funding rate
+    fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${futuresSymbol}`)
+      .then(r => r.json())
+      .then(d => setFundingRate(d.lastFundingRate ? parseFloat(d.lastFundingRate) : null))
+      .catch(() => setFundingRate(null));
+    // Long/Short ratio
+    fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${futuresSymbol}&period=1h&limit=2`)
+      .then(r => r.json())
+      .then(d => setLongShortRatio(Array.isArray(d) && d[0] ? parseFloat(d[0].longShortRatio) : null))
+      .catch(() => setLongShortRatio(null));
+  }, [assetType, selectedAsset]);
 
   // Fetch OHLCV and run engine
   const analyze = useCallback(async (symbol, tf) => {
     setLoading(true);
     try {
-      const binanceSymbol = assetType === 'forex'
-        ? null // forex handled separately
-        : symbol;
-
       let ohlcv;
       if (assetType === 'crypto') {
         const res = await fetch(
-          `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${tf}&limit=500`
+          `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=500`
         );
         const raw = await res.json();
         if (!Array.isArray(raw)) throw new Error('Invalid data');
@@ -132,21 +172,29 @@ export default function SignalDashboard({ fearGreedValue, onSymbolSelect }) {
           volume: parseFloat(k[5]),
         }));
       } else {
-        // Forex: use server proxy
-        const res = await fetch(`/api/forex/candles?symbol=${symbol}&interval=${tf}`);
-        const data = await res.json();
-        ohlcv = data.candles || [];
+        ohlcv = await fetchForexOHLCV(symbol);
       }
 
       if (ohlcv.length < 50) throw new Error('Not enough data');
-      const engineResult = runSignalEngine(ohlcv, fearGreedValue);
+      const engineResult = runSignalEngine(ohlcv, {
+        fearGreedValue: fearGreedValue ? parseInt(fearGreedValue) : null,
+        fearGreedPrev: fearGreedPrev ? parseInt(fearGreedPrev) : null,
+        fundingRate,
+        longShortRatio,
+        btcDominance,
+        btcDominancePrev,
+        globalMarketCap,
+        globalMarketCapPrev,
+        marketCap,
+        assetType,
+      });
       setResults(engineResult);
     } catch (e) {
       console.error('Signal analysis error:', e);
       setResults(null);
     }
     setLoading(false);
-  }, [assetType, fearGreedValue]);
+  }, [assetType, fearGreedValue, fearGreedPrev, fundingRate, longShortRatio, btcDominance, btcDominancePrev, globalMarketCap, globalMarketCapPrev, marketCap]);
 
   useEffect(() => {
     analyze(selectedAsset, timeframe);
@@ -172,13 +220,11 @@ export default function SignalDashboard({ fearGreedValue, onSymbolSelect }) {
             low: parseFloat(k[3]), close: parseFloat(k[4]), volume: parseFloat(k[5]),
           }));
         } else {
-          const res = await fetch(`/api/forex/candles?symbol=${asset.symbol}&interval=${timeframe}`);
-          const data = await res.json();
-          ohlcv = data.candles || [];
+          ohlcv = await fetchForexOHLCV(asset.symbol);
         }
 
         if (ohlcv.length < 50) continue;
-        const r = runSignalEngine(ohlcv, fearGreedValue);
+        const r = runSignalEngine(ohlcv, { fearGreedValue: fearGreedValue ? parseInt(fearGreedValue) : null, assetType });
         results.push({
           ...asset,
           ...r.summary,
@@ -209,6 +255,32 @@ export default function SignalDashboard({ fearGreedValue, onSymbolSelect }) {
 
   return (
     <div className="signal-dashboard">
+      {/* Sentiment Info Bar */}
+      {assetType === 'crypto' && (fundingRate != null || longShortRatio != null) && (
+        <div className="sig-sentiment-bar">
+          {fundingRate != null && (
+            <span style={{ color: fundingRate > 0.0005 ? '#f6465d' : fundingRate < -0.0001 ? '#0ecb81' : '#848e9c' }}>
+              Funding: {(fundingRate * 100).toFixed(4)}%
+            </span>
+          )}
+          {longShortRatio != null && (
+            <span style={{ color: longShortRatio > 1.5 ? '#f6465d' : longShortRatio < 0.7 ? '#0ecb81' : '#848e9c' }}>
+              L/S Ratio: {longShortRatio.toFixed(2)}
+            </span>
+          )}
+          {btcDominance != null && (
+            <span style={{ color: '#f0b90b' }}>
+              BTC Dom: {btcDominance.toFixed(1)}%
+            </span>
+          )}
+          {fearGreedValue != null && (
+            <span style={{ color: fearGreedValue < 25 ? '#0ecb81' : fearGreedValue > 75 ? '#f6465d' : '#848e9c' }}>
+              Fear&Greed: {fearGreedValue}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Controls Bar */}
       <div className="sig-controls">
         <div className="sig-controls-left">

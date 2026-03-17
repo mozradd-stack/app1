@@ -678,17 +678,213 @@ const SIGNAL_DEFS = [
 
 // ═══ Main Engine ════════════════════════════════════════════════════════════
 
-export function runSignalEngine(ohlcvData, fearGreedValue = null) {
+// ─── Additional Signal Definitions (Sentiment + Seasonality + On-Chain) ────
+
+const EXTRA_SIGNAL_DEFS = [
+  // ─── Sentiment (101–105) ─────────────────────────────────────────────────
+  { id: 101, name: 'Funding Rate',          cat: 'Sentiment', fn: (d) => {
+    const fr = d.fundingRate;
+    if (fr == null) return { signal: NEUTRAL, value: 0 };
+    // > 0.05% = überhitzt = SHORT; < -0.01% = undersold = LONG
+    return { signal: fr > 0.0005 ? SHORT : fr < -0.0001 ? LONG : NEUTRAL, value: fr * 100 };
+  }},
+  { id: 102, name: 'Long/Short Ratio',      cat: 'Sentiment', fn: (d) => {
+    const r = d.longShortRatio;
+    if (r == null) return { signal: NEUTRAL, value: 0 };
+    // > 1.5 = zu viele Longs = contrarian SHORT; < 0.7 = zu viele Shorts = LONG
+    return { signal: r > 1.5 ? SHORT : r < 0.7 ? LONG : r > 1.0 ? LONG : SHORT, value: r };
+  }},
+  { id: 103, name: 'Fear & Greed Momentum', cat: 'Sentiment', fn: (d) => {
+    const fng = d.fearGreedValue;
+    const prev = d.fearGreedPrev;
+    if (fng == null || prev == null) return { signal: NEUTRAL, value: 0 };
+    const diff = fng - prev;
+    return { signal: diff > 3 ? LONG : diff < -3 ? SHORT : NEUTRAL, value: diff };
+  }},
+  { id: 104, name: 'BTC Dominance Signal',  cat: 'Sentiment', fn: (d) => {
+    const dom = d.btcDominance;
+    const domPrev = d.btcDominancePrev;
+    if (dom == null) return { signal: NEUTRAL, value: 0 };
+    // Steigende Dominanz = Risikoscheu = bullish BTC, bearish Alts
+    if (d.assetType !== 'crypto') return { signal: NEUTRAL, value: 0 };
+    const trend = domPrev != null ? (dom > domPrev ? 1 : -1) : 0;
+    return { signal: dom > 52 && trend > 0 ? LONG : dom < 45 ? LONG : NEUTRAL, value: dom };
+  }},
+  { id: 105, name: 'Market Sentiment Score', cat: 'Sentiment', fn: (d) => {
+    const fng = d.fearGreedValue;
+    const fr = d.fundingRate;
+    const ls = d.longShortRatio;
+    let score = 0, count = 0;
+    if (fng != null) { score += fng > 50 ? 1 : -1; count++; }
+    if (fr != null) { score += fr < 0.0003 ? 1 : -1; count++; }
+    if (ls != null) { score += ls < 1.3 ? 1 : -1; count++; }
+    if (count === 0) return { signal: NEUTRAL, value: 0 };
+    return { signal: score > 0 ? LONG : score < 0 ? SHORT : NEUTRAL, value: score };
+  }},
+
+  // ─── Saisonalität (106–110) ───────────────────────────────────────────────
+  { id: 106, name: 'Day-of-Week Pattern',   cat: 'Saisonalität', fn: (d) => {
+    // Berechne Ø-Return pro Wochentag aus historischen Candles
+    const dayReturns = [0, 0, 0, 0, 0, 0, 0]; // Sun=0..Sat=6
+    const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+    const closes = d.closes;
+    const times = d.times;
+    if (!times || times.length < 20) return { signal: NEUTRAL, value: 0 };
+    for (let i = 1; i < Math.min(closes.length, 200); i++) {
+      const day = new Date(times[i]).getDay();
+      const ret = (closes[i] - closes[i-1]) / closes[i-1];
+      dayReturns[day] += ret;
+      dayCounts[day]++;
+    }
+    const todayDay = new Date(times[times.length - 1]).getDay();
+    const avgRet = dayCounts[todayDay] > 0 ? dayReturns[todayDay] / dayCounts[todayDay] : 0;
+    return { signal: avgRet > 0.001 ? LONG : avgRet < -0.001 ? SHORT : NEUTRAL, value: avgRet * 100 };
+  }},
+  { id: 107, name: 'Month-of-Year Pattern', cat: 'Saisonalität', fn: (d) => {
+    // Historische Monatsperformance aus Candles
+    const monthReturns = new Array(12).fill(0);
+    const monthCounts = new Array(12).fill(0);
+    const closes = d.closes;
+    const times = d.times;
+    if (!times || times.length < 60) return { signal: NEUTRAL, value: 0 };
+    for (let i = 1; i < closes.length; i++) {
+      const month = new Date(times[i]).getMonth();
+      const ret = (closes[i] - closes[i-1]) / closes[i-1];
+      monthReturns[month] += ret;
+      monthCounts[month]++;
+    }
+    const currentMonth = new Date(times[times.length - 1]).getMonth();
+    const avgRet = monthCounts[currentMonth] > 0 ? monthReturns[currentMonth] / monthCounts[currentMonth] : 0;
+    return { signal: avgRet > 0.001 ? LONG : avgRet < -0.001 ? SHORT : NEUTRAL, value: avgRet * 100 };
+  }},
+  { id: 108, name: 'Q4 / Quarter Effect',   cat: 'Saisonalität', fn: (d) => {
+    const times = d.times;
+    if (!times || times.length === 0) return { signal: NEUTRAL, value: 0 };
+    const now = new Date(times[times.length - 1]);
+    const month = now.getMonth(); // 0-11
+    const quarter = Math.floor(month / 3); // 0=Q1, 3=Q4
+    // Q4 (Okt-Dez) historisch bullish für BTC, Q1 auch gut
+    if (quarter === 3) return { signal: LONG, value: 4 };
+    if (quarter === 0) return { signal: LONG, value: 1 };
+    if (quarter === 1) return { signal: NEUTRAL, value: 2 };
+    return { signal: SHORT, value: 3 }; // Q3 historisch schwächer
+  }},
+  { id: 109, name: 'End-of-Month Effect',   cat: 'Saisonalität', fn: (d) => {
+    const times = d.times;
+    if (!times || times.length === 0) return { signal: NEUTRAL, value: 0 };
+    const now = new Date(times[times.length - 1]);
+    const day = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysLeft = daysInMonth - day;
+    // Last 3 days or first 3 days of month often see rebalancing flows
+    if (daysLeft <= 2) return { signal: SHORT, value: daysLeft }; // month-end selling
+    if (day <= 3) return { signal: LONG, value: day }; // month-start buying
+    return { signal: NEUTRAL, value: day };
+  }},
+  { id: 110, name: 'BTC Halving Cycle',     cat: 'Saisonalität', fn: (d) => {
+    if (d.assetType !== 'crypto') return { signal: NEUTRAL, value: 0 };
+    // Letztes BTC Halving: 20. April 2024
+    const halvingDate = new Date('2024-04-20').getTime();
+    const times = d.times;
+    const now = times ? new Date(times[times.length - 1]).getTime() : Date.now();
+    const daysSince = (now - halvingDate) / (1000 * 86400);
+    if (daysSince < 0) return { signal: NEUTRAL, value: 0 };
+    // Historisch: Monate 6-18 nach Halving = starke Bullphase
+    if (daysSince > 180 && daysSince < 540) return { signal: LONG, value: daysSince };
+    // Monate 18-30 = Abkühlung / Bärenmarkt-Vorbereitung
+    if (daysSince >= 540 && daysSince < 900) return { signal: SHORT, value: daysSince };
+    return { signal: NEUTRAL, value: daysSince };
+  }},
+
+  // ─── On-Chain / Macro (111–115) ──────────────────────────────────────────
+  { id: 111, name: 'Global MarketCap Trend', cat: 'Macro', fn: (d) => {
+    const mc = d.globalMarketCap;
+    const mcPrev = d.globalMarketCapPrev;
+    if (mc == null || mcPrev == null) return { signal: NEUTRAL, value: 0 };
+    const chg = (mc - mcPrev) / mcPrev * 100;
+    return { signal: chg > 1 ? LONG : chg < -1 ? SHORT : NEUTRAL, value: chg };
+  }},
+  { id: 112, name: 'BTC Dominance vs EMA',  cat: 'Macro', fn: (d) => {
+    const dom = d.btcDominance;
+    const domPrev = d.btcDominancePrev;
+    if (dom == null) return { signal: NEUTRAL, value: 0 };
+    // Steigende Dominanz = Bitcoin outperformt → für BTC bullish
+    if (d.assetType !== 'crypto') return { signal: NEUTRAL, value: 0 };
+    const rising = domPrev != null && dom > domPrev;
+    return { signal: rising ? LONG : SHORT, value: dom };
+  }},
+  { id: 113, name: 'Volume/MarketCap Ratio', cat: 'Macro', fn: (d) => {
+    const mc = d.marketCap;
+    const v = d.volumes;
+    if (!mc || !v || v.length === 0) return { signal: NEUTRAL, value: 0 };
+    const avgVol = v.slice(-20).reduce((a, b) => a + b, 0) / Math.min(v.length, 20);
+    const ratio = mc > 0 ? avgVol / mc : 0;
+    // Hohes Volumen relativ zu MarketCap = hohe Aktivität
+    return { signal: ratio > 0.05 ? LONG : ratio < 0.01 ? SHORT : NEUTRAL, value: ratio * 100 };
+  }},
+  { id: 114, name: 'NVT Signal (approx)',    cat: 'Macro', fn: (d) => {
+    // Vereinfachtes NVT: Price / (90-day avg Volume)
+    const c = d.closes;
+    const v = d.volumes;
+    if (!c || c.length < 90 || !v) return { signal: NEUTRAL, value: 0 };
+    const avgVol = v.slice(-90).reduce((a, b) => a + b, 0) / 90;
+    const nvt = avgVol > 0 ? c[c.length - 1] / avgVol : 0;
+    const nvtSma = c.slice(-90).reduce((a, b) => a + b, 0) / 90 / avgVol;
+    // Hohes NVT = überbewertet = SHORT; Niedriges = unterbewertet = LONG
+    return { signal: nvt > nvtSma * 1.5 ? SHORT : nvt < nvtSma * 0.7 ? LONG : NEUTRAL, value: nvt };
+  }},
+  { id: 115, name: 'Exchange Inflow Proxy',  cat: 'Macro', fn: (d) => {
+    // Proxy: Hohe Volumen-Spikes bei fallenden Preisen = Sell-Druck
+    const c = d.closes;
+    const v = d.volumes;
+    if (!c || c.length < 10 || !v) return { signal: NEUTRAL, value: 0 };
+    const n = c.length;
+    let avgVol = 0; for (let i = 1; i <= 10; i++) avgVol += v[n-1-i]; avgVol /= 10;
+    const volSpike = v[n-1] > avgVol * 2;
+    const priceDown = c[n-1] < c[n-2];
+    const priceUp = c[n-1] > c[n-2];
+    if (volSpike && priceDown) return { signal: SHORT, value: v[n-1] / avgVol }; // exchange inflow selling
+    if (volSpike && priceUp) return { signal: LONG, value: v[n-1] / avgVol }; // strong buying
+    return { signal: NEUTRAL, value: v[n-1] / avgVol };
+  }},
+];
+
+const ALL_SIGNAL_DEFS = [...SIGNAL_DEFS, ...EXTRA_SIGNAL_DEFS];
+
+export function runSignalEngine(ohlcvData, extraData = {}) {
+  const fearGreedValue = typeof extraData === 'number' ? extraData : (extraData.fearGreedValue ?? null);
+  const {
+    fundingRate = null,
+    longShortRatio = null,
+    btcDominance = null,
+    btcDominancePrev = null,
+    globalMarketCap = null,
+    globalMarketCapPrev = null,
+    marketCap = null,
+    fearGreedPrev = null,
+    assetType = 'crypto',
+  } = typeof extraData === 'object' ? extraData : {};
+
   const d = {
     opens: ohlcvData.map(c => c.open),
     highs: ohlcvData.map(c => c.high),
     lows: ohlcvData.map(c => c.low),
     closes: ohlcvData.map(c => c.close),
     volumes: ohlcvData.map(c => c.volume),
+    times: ohlcvData.map(c => c.time),
     fearGreedValue,
+    fearGreedPrev,
+    fundingRate,
+    longShortRatio,
+    btcDominance,
+    btcDominancePrev,
+    globalMarketCap,
+    globalMarketCapPrev,
+    marketCap,
+    assetType,
   };
 
-  const results = SIGNAL_DEFS.map(def => {
+  const results = ALL_SIGNAL_DEFS.map(def => {
     try {
       const result = def.fn(d);
       return {
@@ -796,4 +992,7 @@ export const CATEGORIES = [
   'Advanced',
   'Patterns',
   'Fundamental',
+  'Sentiment',
+  'Saisonalität',
+  'Macro',
 ];

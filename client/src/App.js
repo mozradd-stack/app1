@@ -11,7 +11,7 @@ import NewsWidget from './components/NewsWidget';
 import SignalDashboard from './components/SignalDashboard';
 import './App.css';
 
-const COINGECKO = '/api/coingecko';
+const COINGECKO = 'https://api.coingecko.com/api/v3';
 
 // Map Binance symbol → CoinGecko id
 const SYMBOL_TO_CG = {
@@ -69,18 +69,26 @@ function App() {
   // Fear & Greed
   const fetchFearGreed = useCallback(async () => {
     try {
-      const res = await fetch('/api/fng');
+      const res = await fetch('https://api.alternative.me/fng/?limit=10');
       const data = await res.json();
-      if (data?.data?.[0]) setFearGreed(data.data[0]);
+      if (data?.data?.[0]) setFearGreed({ ...data.data[0], history: data.data });
     } catch (e) { console.error('FNG:', e); }
   }, []);
 
   // News
   const fetchNews = useCallback(async () => {
     try {
-      const res = await fetch('/api/news');
+      const res = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest');
       const data = await res.json();
-      if (data?.articles) setNews(data.articles);
+      const articles = (data.Data || []).slice(0, 20).map(item => ({
+        title: item.title,
+        url: item.url,
+        source: item.source_info?.name || item.source,
+        published: item.published_on,
+        imageUrl: item.imageurl,
+        body: item.body?.substring(0, 200),
+      }));
+      setNews(articles);
     } catch (e) { console.error('News:', e); }
   }, []);
 
@@ -192,6 +200,9 @@ function App() {
             {activeTab === 'signals' && (
               <SignalDashboard
                 fearGreedValue={fearGreed ? parseInt(fearGreed.value) : null}
+                fearGreedPrev={fearGreed?.history?.[1] ? parseInt(fearGreed.history[1].value) : null}
+                btcDominance={globalData?.market_cap_percentage?.btc ?? null}
+                globalMarketCap={globalData?.total_market_cap?.usd ?? null}
                 onSymbolSelect={handleSymbolSelect}
               />
             )}
